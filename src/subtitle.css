@@ -1,0 +1,172 @@
+/* Note: the Vazirmatn font is registered from JS via the FontFace API in
+   content.js (YouTube's CSP blocks @font-face url() from chrome-extension://). */
+
+/* Subtitle overlay + toast styles. Prefixed with #ytfa- to avoid clashes. */
+
+#ytfa-bar {
+  position: absolute;
+  left: 50%;
+  bottom: var(--ytfa-bottom, 8%);
+  transform: translateX(-50%);
+  max-width: 88%;
+  z-index: 60; /* above video, below YouTube's settings menus */
+  padding: 6px 16px;
+  border-radius: 10px;
+  background: var(--ytfa-bg, rgba(0, 0, 0, 0.55));
+  backdrop-filter: blur(2px);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  line-height: 1.45;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+#ytfa-bar.ytfa-visible {
+  opacity: 1;
+}
+
+#ytfa-bar .ytfa-fa {
+  direction: rtl;
+  unicode-bidi: plaintext;
+  white-space: pre-wrap;
+}
+
+#ytfa-bar .ytfa-orig {
+  direction: ltr;
+  margin-top: 2px;
+  opacity: 0.92;
+  white-space: pre-wrap;
+}
+
+/* Hide YouTube's native caption overlay while our Persian bar is active. */
+.html5-video-player.ytfa-on .ytp-caption-window-container,
+.html5-video-player.ytfa-on .caption-window {
+  display: none !important;
+}
+
+/* Toast notification (missing key, no captions, …) */
+#ytfa-toast {
+  position: fixed;
+  top: 72px;
+  right: 24px;
+  z-index: 99999;
+  max-width: 320px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #1f1f1f;
+  color: #fff;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  font-size: 14px;
+  direction: rtl;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid #c8102e;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+#ytfa-toast.ytfa-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── Floating toggle / retry button ─────────────────────────────────────── */
+
+#ytfa-toggle-btn {
+  position: absolute;
+  bottom: 54px;           /* just above the YouTube control bar */
+  left: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  line-height: 1;
+  z-index: 70;
+  opacity: 0.72;
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.22s ease,
+              box-shadow 0.22s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+  user-select: none;
+  backdrop-filter: blur(4px);
+}
+
+#ytfa-toggle-btn:hover {
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+/* Active — subtitles visible */
+#ytfa-toggle-btn.ytfa-btn-active {
+  background: rgba(22, 163, 74, 0.82);   /* green-600 */
+  box-shadow: 0 2px 10px rgba(22, 163, 74, 0.45);
+}
+#ytfa-toggle-btn.ytfa-btn-active:hover {
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.6);
+}
+
+/* Hidden — subtitles temporarily off */
+#ytfa-toggle-btn.ytfa-btn-hidden {
+  background: rgba(51, 65, 85, 0.82);    /* slate-700 */
+}
+
+/* Error — boot() failed, shows retry */
+#ytfa-toggle-btn.ytfa-btn-error {
+  background: rgba(220, 38, 38, 0.88);   /* red-600 */
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.5);
+  animation: ytfa-pulse-error 1.8s ease-in-out infinite;
+}
+#ytfa-toggle-btn.ytfa-btn-error:hover {
+  animation: none;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.7);
+}
+
+/* Loading — boot() in progress */
+#ytfa-toggle-btn.ytfa-btn-loading {
+  background: rgba(37, 99, 235, 0.82);   /* blue-600 */
+  cursor: wait;
+}
+#ytfa-toggle-btn.ytfa-btn-loading .ytfa-btn-icon {
+  animation: ytfa-spin 1s linear infinite;
+}
+
+@keyframes ytfa-pulse-error {
+  0%, 100% { opacity: 0.72; }
+  50%       { opacity: 1;    }
+}
+
+@keyframes ytfa-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Tooltip */
+#ytfa-toggle-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e2e8f0;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 6px;
+  direction: rtl;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+#ytfa-toggle-btn:hover::after {
+  opacity: 1;
+}

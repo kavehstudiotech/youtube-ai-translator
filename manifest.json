@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "مترجم فارسی یوتیوب — Persian YouTube Translator",
+  "version": "1.0.0",
+  "description": "ترجمه و زیرنویس همزمان ویدیوها با هوش مصنوعی. کاملاً رایگان، پشتیبانی از Google AI Studio، مترجم گوگل و قابلیت تنظیم سرعت (RPM).",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://*.youtube.com/*",
+    "https://openrouter.ai/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://translate.googleapis.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "مترجم فارسی یوتیوب",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["src/inject-main.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["src/content.js"],
+      "css": ["src/subtitle.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["fonts/*.woff2"],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ]
+}

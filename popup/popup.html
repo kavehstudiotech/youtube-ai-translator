@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="popup.css" />
+  <title>مترجم فارسی یوتیوب</title>
+</head>
+
+<body>
+  <header class="hdr">
+    <div class="logo">
+      <span class="play">▶</span>
+    </div>
+    <div class="title">
+      <h1>مترجم فارسی یوتیوب</h1>
+      <p>زیرنویس خودکار، هم‌زمان روی ویدئو</p>
+    </div>
+    <label class="switch" title="روشن / خاموش">
+      <input type="checkbox" id="enabled" />
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <main>
+    <!-- Connection -->
+    <section class="card">
+      <h2>تنظیمات سرویس ترجمه</h2>
+      <label class="field">
+        <span>سرویس‌دهنده</span>
+        <select id="provider">
+          <option value="google_free">Google Translate (رایگان و بدون نیاز به کلید)</option>
+          <option value="grok">Grok (دارای پلن رایگان)</option>
+          <option value="gemini">Google AI Studio (دارای پلن رایگان)</option>
+          <option value="deepseek">DeepSeek</option>
+          <option value="openai">OpenAI</option>
+          <option value="openrouter">OpenRouter</option>
+
+          <option value="local">Ollama (مدل های لوکال)</option>
+          <option value="custom">آدرس سفارشی (Custom API)</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>محدودیت درخواست در دقیقه (RPM)</span>
+        <input type="number" id="rpm" min="1" max="1000" value="15" />
+      </label>
+
+      <!-- Google Free -->
+      <div id="section-google_free" class="provider-section">
+        <p class="info-text">ترجمه به وسیله سرورهای عمومی گوگل انجام می‌شود. سریع، بدون نیاز به تنظیمات و کاملاً رایگان.
+        </p>
+      </div>
+
+      <!-- Grok -->
+      <div id="section-grok" class="provider-section" hidden>
+        <label class="field">
+          <span>کلید API</span>
+          <input type="password" id="grokApiKey" placeholder="gsk_..." autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>مدل Grok</span>
+          <select id="grokModelSelect">
+            <option value="openai/gpt-oss-120b">openai/gpt-oss-120b (پیش‌فرض)</option>
+            <option value="meta-llama/llama-4-scout-17b-16e-instruct">meta-llama/llama-4-scout-17b-16e-instruct (بهترین
+              برای رایگان)</option>
+            <option value="qwen/qwen3.6-27b">qwen/qwen3.6-27b</option>
+            <option value="openai/gpt-oss-20b">openai/gpt-oss-20b</option>
+            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+            <option value="__custom__">سفارشی…</option>
+          </select>
+        </label>
+        <label class="field" id="customGrokModelField" hidden>
+          <span>شناسه‌ی مدل سفارشی</span>
+          <input type="text" id="grokModel" placeholder="grok-..." />
+        </label>
+        <div class="row">
+          <button id="testGrok" class="btn-ghost">بررسی کلید</button>
+          <a href="https://console.groq.com/" target="_blank" rel="noopener" class="link">دریافت کلید ↗</a>
+        </div>
+      </div>
+
+      <!-- DeepSeek Direct -->
+      <div id="section-deepseek" class="provider-section" hidden>
+        <label class="field">
+          <span>کلید API (DeepSeek)</span>
+          <input type="password" id="deepseekApiKey" placeholder="sk-..." autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>مدل DeepSeek</span>
+          <select id="deepseekModelSelect">
+            <option value="deepseek-v4-flash">deepseek-v4-flash</option>
+            <option value="deepseek-v4-pro">deepseek-v4-pro</option>
+            <option value="__custom__">سفارشی…</option>
+          </select>
+        </label>
+        <label class="field" id="customDeepseekModelField" hidden>
+          <span>شناسه‌ی مدل سفارشی</span>
+          <input type="text" id="deepseekModel" placeholder="deepseek-..." />
+        </label>
+        <div class="row">
+          <button id="testDeepseek" class="btn-ghost">بررسی کلید</button>
+          <a href="https://platform.deepseek.com/" target="_blank" rel="noopener" class="link">دریافت کلید ↗</a>
+        </div>
+      </div>
+
+      <!-- OpenAI Direct -->
+      <div id="section-openai" class="provider-section" hidden>
+        <label class="field">
+          <span>کلید API (OpenAI)</span>
+          <input type="password" id="openaiApiKey" placeholder="sk-..." autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>مدل OpenAI</span>
+          <select id="openaiModelSelect">
+            <option value="gpt-5.6-luna">gpt-5.6-luna</option>
+            <option value="gpt-4o-mini">gpt-4o-mini</option>
+            <option value="gpt-5.6-sol">gpt-5.6-sol</option>
+            <option value="gpt-4o">gpt-4o</option>
+            <option value="__custom__">سفارشی…</option>
+          </select>
+        </label>
+        <label class="field" id="customOpenaiModelField" hidden>
+          <span>شناسه‌ی مدل سفارشی</span>
+          <input type="text" id="openaiModel" placeholder="gpt-..." />
+        </label>
+        <div class="row">
+          <button id="testOpenai" class="btn-ghost">بررسی کلید</button>
+          <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" class="link">دریافت کلید ↗</a>
+        </div>
+      </div>
+
+      <!-- OpenRouter -->
+      <div id="section-openrouter" class="provider-section" hidden>
+        <label class="field">
+          <span>کلید API</span>
+          <input type="password" id="apiKey" placeholder="sk-or-..." autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>مدل</span>
+          <select id="modelSelect">
+            <optgroup label="مدل‌های تجاری (Paid)">
+              <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+              <option value="openai/gpt-4o">GPT-4o</option>
+              <option value="openai/gpt-5.6-sol">GPT-5.6 Sol</option>
+              <option value="deepseek/deepseek-v4-pro">DeepSeek V4 Pro</option>
+              <option value="google/gemini-2.5-pro">Gemini 2.5 Pro</option>
+            </optgroup>
+            <optgroup label="مدل‌های کاملاً رایگان (Free)">
+              <option value="google/gemini-2.5-pro:free">Gemini 2.5 Pro Free</option>
+              <option value="meta-llama/llama-4-scout:free">Llama 4 Scout Free</option>
+              <option value="deepseek/deepseek-r1:free">DeepSeek R1 Free</option>
+              <option value="deepseek/deepseek-chat:free">DeepSeek Chat Free</option>
+            </optgroup>
+            <option value="__custom__">سفارشی…</option>
+          </select>
+        </label>
+        <label class="field" id="customModelField" hidden>
+          <span>شناسه‌ی مدل سفارشی</span>
+          <input type="text" id="model" placeholder="provider/model-id" />
+        </label>
+        <div class="row">
+          <button id="test" class="btn-ghost">بررسی کلید</button>
+          <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" class="link">دریافت کلید ↗</a>
+        </div>
+      </div>
+
+      <!-- Gemini -->
+      <div id="section-gemini" class="provider-section" hidden>
+        <label class="field">
+          <span>کلید API (Gemini)</span>
+          <input type="password" id="geminiApiKey" placeholder="AIzaSy..." autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>مدل Gemini</span>
+          <select id="geminiModelSelect">
+            <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash lite (پیش‌فرض)</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash</option>
+            <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+
+            <option value="__custom__">سفارشی…</option>
+          </select>
+        </label>
+        <label class="field" id="customGeminiModelField" hidden>
+          <span>شناسه‌ی مدل سفارشی</span>
+          <input type="text" id="geminiModel" placeholder="gemini-..." />
+        </label>
+        <div class="row">
+          <button id="testGemini" class="btn-ghost">بررسی کلید</button>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="link">دریافت کلید ↗</a>
+        </div>
+      </div>
+
+      <!-- Ollama / Local -->
+      <div id="section-local" class="provider-section" hidden>
+        <label class="field">
+          <span>آدرس Ollama</span>
+          <input type="text" id="localBaseUrl" placeholder="http://localhost:11434/v1" />
+        </label>
+        <label class="field">
+          <span>نام مدل</span>
+          <input type="text" id="localModel" placeholder="llama3" />
+        </label>
+        <p class="info-text">ابتدا مطمئن شوید سرویس Ollama در سیستم شما در حال اجرا است و دسترسی CORS برقرار است.</p>
+      </div>
+
+      <!-- Custom -->
+      <div id="section-custom" class="provider-section" hidden>
+        <label class="field">
+          <span>آدرس API (Base URL)</span>
+          <input type="text" id="customBaseUrl" placeholder="https://api.yourprovider.com/v1" />
+        </label>
+        <label class="field">
+          <span>کلید API (اختیاری)</span>
+          <input type="password" id="customApiKey" placeholder="کلید دسترسی..." autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>نام مدل</span>
+          <input type="text" id="customModel" placeholder="gpt-4" />
+        </label>
+      </div>
+
+      <div id="status" class="status"></div>
+    </section>
+
+    <!-- Display -->
+    <section class="card">
+      <h2>نمایش</h2>
+      <label class="check">
+        <input type="checkbox" id="showOriginal" />
+        <span>نمایش متن اصلی (زیرِ ترجمه)</span>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" id="showPersian" />
+        <span>نمایش زیرنویس فارسی</span>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" id="origFirst" />
+        <span>نمایش انگلیسی بالا (ترجمه در پایین)</span>
+      </label>
+
+      <div class="grid2">
+        <label class="field">
+          <span>اندازه فارسی</span>
+          <div class="slider-val">
+            <input type="range" id="faFontSize" min="14" max="48" />
+            <output id="faFontSizeV"></output>
+          </div>
+        </label>
+        <label class="field">
+          <span>رنگ فارسی</span>
+          <input type="color" id="faColor" />
+        </label>
+      </div>
+
+      <div class="grid2">
+        <label class="field">
+          <span>اندازه متن اصلی</span>
+          <div class="slider-val">
+            <input type="range" id="origFontSize" min="10" max="36" />
+            <output id="origFontSizeV"></output>
+          </div>
+        </label>
+        <label class="field">
+          <span>رنگ متن اصلی</span>
+          <input type="color" id="origColor" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>فونت فارسی</span>
+        <select id="faFontFamily">
+          <option value="'Vazirmatn', Tahoma, Arial, sans-serif">وزیرمتن / پیش‌فرض</option>
+          <option value="Tahoma, sans-serif">Tahoma</option>
+          <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+          <option value="'IRANSans', Tahoma, sans-serif">ایران‌سنس</option>
+          <option value="Arial, sans-serif">Arial</option>
+        </select>
+      </label>
+
+      <label class="check">
+        <input type="checkbox" id="faBold" />
+        <span>متن فارسی ضخیم (Bold)</span>
+      </label>
+    </section>
+
+    <!-- Background -->
+    <section class="card">
+      <h2>پس‌زمینه و جای‌گذاری</h2>
+      <div class="grid2">
+        <label class="field">
+          <span>رنگ پس‌زمینه</span>
+          <input type="color" id="bgColor" />
+        </label>
+        <label class="field">
+          <span>شفافیت</span>
+          <div class="slider-val">
+            <input type="range" id="bgOpacity" min="0" max="100" />
+            <output id="bgOpacityV"></output>
+          </div>
+        </label>
+      </div>
+      <label class="field">
+        <span>فاصله از پایین</span>
+        <div class="slider-val">
+          <input type="range" id="bottomOffset" min="0" max="40" />
+          <output id="bottomOffsetV"></output>
+        </div>
+      </label>
+    </section>
+
+    <!-- Live preview -->
+    <section class="card preview-card">
+      <h2>پیش‌نمایش</h2>
+      <div class="preview">
+        <div id="previewBar" dir="rtl">
+          <div id="previewFa" class="ytfa-fa">سلام، به ویدئوی امروز خوش آمدید.</div>
+          <div id="previewOrig" class="ytfa-orig" dir="ltr">Hi, welcome to today's video.</div>
+        </div>
+      </div>
+    </section>
+
+    <button id="apply" class="btn-primary">اعمال روی ویدئو</button>
+    <div class="footer">
+      <button id="reset" class="btn-ghost small">بازنشانی تنظیمات</button>
+      <span class="saved" id="saved">ذخیره شد ✓</span>
+    </div>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
