@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "مترجم فارسی یوتیوب — Persian YouTube Translator",
   "version": "1.0.0",
-  "description": "ترجمه و زیرنویس همزمان ویدیوها با هوش مصنوعی. کاملاً رایگان، پشتیبانی از Google AI Studio، مترجم گوگل و قابلیت تنظیم سرعت (RPM).",
+  "description": "ترجمه همزمان و زیرنویس دوزبانه (فارسی-انگلیسی) برای ویدیوهای یوتیوب با هوش مصنوعی. ۱۰۰٪ رایگان، روان و بدون محدودیت!",
   "permissions": ["storage", "activeTab"],
   "host_permissions": [
     "https://www.youtube.com/*",
