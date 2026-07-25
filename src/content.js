@@ -11,6 +11,63 @@
 const REQ = 'ytfa-req';
 const RES = 'ytfa-res';
 
+function isYouTubeVideoPage() {
+  if (!window.location.hostname.includes('youtube.com')) return true;
+  const path = window.location.pathname;
+  return path.includes('/watch') || path.includes('/shorts/');
+}
+
+function getVideoIdFromUrl(url = window.location.href) {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    const shortsMatch = parsed.pathname.match(/^\/shorts\/([^/?#]+)/);
+    if (shortsMatch) return shortsMatch[1];
+    if (parsed.pathname.includes('/watch')) return parsed.searchParams.get('v');
+  } catch (error) {
+    console.warn('[ytfa] failed to parse video URL:', error);
+  }
+  return null;
+}
+
+const MAX_CACHE_SIZE = 15;
+const captionCache = new Map();
+let currentVideoId = getVideoIdFromUrl();
+
+function getCaptionCacheKey(videoId, sourceText) {
+  return `${videoId}_${sourceText}`;
+}
+
+function getCachedCaption(videoId, sourceText) {
+  if (!videoId) return undefined;
+  const key = getCaptionCacheKey(videoId, sourceText);
+  if (!captionCache.has(key)) return undefined;
+
+  const value = captionCache.get(key);
+  captionCache.delete(key);
+  captionCache.set(key, value);
+  return value;
+}
+
+function cacheCaption(videoId, sourceText, translatedText) {
+  if (!videoId || !sourceText) return;
+  const key = getCaptionCacheKey(videoId, sourceText);
+  captionCache.delete(key);
+  captionCache.set(key, translatedText);
+
+  while (captionCache.size > MAX_CACHE_SIZE) {
+    const oldestKey = captionCache.keys().next().value;
+    if (oldestKey === undefined) break;
+    captionCache.delete(oldestKey);
+  }
+}
+
+function applyCachedCaptions(videoId, cues) {
+  for (const cue of cues) {
+    const cached = getCachedCaption(videoId, cue.text);
+    if (cached !== undefined) cue.fa = cached;
+  }
+}
+
 const SETTINGS_DEFAULTS = {
   enabled: true,
   showOriginal: true,
@@ -34,6 +91,7 @@ let state = {
   cues: [], // [{ start, end, text, fa }]
   loading: false,
   currentIndex: -1,
+  activeVideo: null,
   rafId: null,
   translationSessionId: 0,
 };
@@ -93,7 +151,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
         document.getElementById('movie_player');
       if (player) player.classList.remove('ytfa-on');
       if (toggleBtn) toggleBtn.style.display = 'none';
-    } else {
+    } else if (isYouTubeVideoPage()) {
       bootFailed = false;
       subtitleVisible = true;
       if (bar) attachBar();
@@ -104,6 +162,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
       } else if (state.cues.length) {
         translateAll();
       }
+    } else {
+      cleanupPageUi();
     }
   }
 });
@@ -112,7 +172,79 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 let bar, faEl, origEl;
 
+function getActiveReelRenderer() {
+  if (!window.location.pathname.startsWith('/shorts/')) return null;
+
+  const candidates = Array.from(
+    document.querySelectorAll('ytd-reel-video-renderer')
+  ).map((renderer) => {
+    const video = renderer.querySelector('video.html5-main-video, video');
+    const rect = renderer.getBoundingClientRect();
+    const visibleWidth = Math.max(
+      0,
+      Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0)
+    );
+    const visibleHeight = Math.max(
+      0,
+      Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+    );
+    return {
+      renderer,
+      video,
+      visibleArea: visibleWidth * visibleHeight,
+      centerDistance: Math.abs((rect.top + rect.bottom) / 2 - window.innerHeight / 2),
+    };
+  }).filter((candidate) => candidate.video && candidate.visibleArea > 0);
+
+  candidates.sort((a, b) => {
+    const aPlaying = !a.video.paused && !a.video.ended ? 1 : 0;
+    const bPlaying = !b.video.paused && !b.video.ended ? 1 : 0;
+    if (aPlaying !== bPlaying) return bPlaying - aPlaying;
+    if (a.visibleArea !== b.visibleArea) return b.visibleArea - a.visibleArea;
+    if (a.centerDistance !== b.centerDistance) return a.centerDistance - b.centerDistance;
+    return Number(b.renderer.hasAttribute('is-active')) -
+      Number(a.renderer.hasAttribute('is-active'));
+  });
+
+  return candidates[0]?.renderer || null;
+}
+
+function getActiveVideo() {
+  const activeReelVideo = getActiveReelRenderer()?.querySelector(
+    'video.html5-main-video, video'
+  );
+  if (activeReelVideo) return activeReelVideo;
+
+  const videos = Array.from(document.querySelectorAll('video.html5-main-video, video'));
+  if (!videos.length) return null;
+
+  const visibleVideos = videos.filter((video) => {
+    const rect = video.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0 &&
+      rect.bottom > 0 && rect.right > 0 &&
+      rect.top < window.innerHeight && rect.left < window.innerWidth;
+  });
+
+  return visibleVideos.find((video) => !video.paused && !video.ended) ||
+    visibleVideos.sort((a, b) => {
+      const aRect = a.getBoundingClientRect();
+      const bRect = b.getBoundingClientRect();
+      return (bRect.width * bRect.height) - (aRect.width * aRect.height);
+    })[0] || videos[0];
+}
+
+function getActivePlayer() {
+  const activeReelPlayer = getActiveReelRenderer()?.querySelector('.html5-video-player');
+  if (activeReelPlayer) return activeReelPlayer;
+
+  const video = getActiveVideo();
+  return video?.closest('.html5-video-player') ||
+    document.getElementById('movie_player') ||
+    document.querySelector('.html5-video-player');
+}
+
 function ensureBar() {
+  if (!isYouTubeVideoPage()) return null;
   if (bar && document.body.contains(bar)) return bar;
 
   bar = document.createElement('div');
@@ -134,11 +266,13 @@ function ensureBar() {
 }
 
 function attachBar() {
-  const player =
-    document.querySelector('.html5-video-player') ||
-    document.getElementById('movie_player');
+  if (!isYouTubeVideoPage() || !bar) return;
+  const player = getActivePlayer();
   const host = player || document.body;
-  if (bar.parentElement !== host) host.appendChild(bar);
+  if (bar.parentElement !== host) {
+    bar.parentElement?.classList.remove('ytfa-on');
+    host.appendChild(bar);
+  }
   if (player) player.classList.toggle('ytfa-on', !!settings.enabled);
   ensureToggleBtn();
 }
@@ -146,34 +280,148 @@ function attachBar() {
 /* ───────────────── floating toggle / retry button ────────────────────────── */
 
 let toggleBtn = null;
+let ensureToggleBtnFrame = null;
+
+function getActiveShortsActionBar() {
+  // ۱. پیدا کردن شورتس فعال در صفحه
+  const activeReel = document.querySelector('ytd-reel-video-renderer[is-active]') ||
+                     Array.from(document.querySelectorAll('ytd-reel-video-renderer')).find(r => {
+                       const rect = r.getBoundingClientRect();
+                       return rect.top >= -100 && rect.top < window.innerHeight / 2 && rect.height > 0;
+                     });
+
+  if (activeReel) {
+    const actionBar = activeReel.querySelector('reel-action-bar-view-model, .ytwReelActionBarViewModelHost, #button-bar, #actions-inner, #actions');
+    const likeBtn = activeReel.querySelector('like-button-view-model, .ytLikeButtonViewModelHost, ytd-like-button-entity, #like-button');
+    if (actionBar) return { actionBar, likeBtn };
+  }
+
+  // ۲. جستجوی مستقیم بر اساس اسکرین‌شات DevTools شما
+  const visibleBar = document.querySelector('reel-action-bar-view-model, .ytwReelActionBarViewModelHost');
+  if (visibleBar) {
+    const likeBtn = visibleBar.querySelector('like-button-view-model, .ytLikeButtonViewModelHost') ||
+                    document.querySelector('like-button-view-model, .ytLikeButtonViewModelHost');
+    return { actionBar: visibleBar, likeBtn };
+  }
+
+  // ۳. فال‌بک بر اساس والد دکمه لایک
+  const likeBtn = document.querySelector('like-button-view-model, .ytLikeButtonViewModelHost, ytd-like-button-entity, #like-button');
+  if (likeBtn) {
+    const actionBar = likeBtn.closest('reel-action-bar-view-model, .ytwReelActionBarViewModelHost, #button-bar, #actions-inner, #actions') || likeBtn.parentElement;
+    return { actionBar, likeBtn };
+  }
+
+  return { actionBar: null, likeBtn: null };
+}
+
+function getToggleBtnHost() {
+  if (window.location.pathname.startsWith('/shorts/')) {
+    const { actionBar } = getActiveShortsActionBar();
+    if (actionBar) return actionBar;
+  }
+
+  const player = getActivePlayer();
+  if (!player) return null;
+  return player.querySelector('.ytp-right-controls') ||
+    player.querySelector('.ytp-chrome-controls');
+}
 
 function ensureToggleBtn() {
-  if (!settings.enabled) {
+  if (!settings.enabled || !isYouTubeVideoPage()) {
     if (toggleBtn) toggleBtn.style.display = 'none';
     return;
   }
 
-  const player =
-    document.querySelector('.html5-video-player') ||
-    document.getElementById('movie_player');
-  if (!player) return;
+  const isShorts = window.location.pathname.startsWith('/shorts/');
+  let controls = null;
+  let shortsLikeBtn = null;
 
-  if (!toggleBtn || !player.contains(toggleBtn)) {
+  if (isShorts) {
+    const res = getActiveShortsActionBar();
+    controls = res.actionBar;
+    shortsLikeBtn = res.likeBtn;
+  } else {
+    controls = getToggleBtnHost();
+  }
+
+  if (!controls) {
+    if (toggleBtn) toggleBtn.style.display = 'none';
+    return;
+  }
+
+  if (!toggleBtn) {
     toggleBtn = document.createElement('button');
     toggleBtn.id = 'ytfa-toggle-btn';
+    toggleBtn.className = 'ytp-button';
+    toggleBtn.type = 'button';
 
     const icon = document.createElement('span');
     icon.className = 'ytfa-btn-icon';
     toggleBtn.appendChild(icon);
 
     toggleBtn.addEventListener('click', onToggleBtnClick);
-    player.appendChild(toggleBtn);
+  }
+
+  toggleBtn.classList.toggle('ytfa-shorts-btn', isShorts);
+
+  if (isShorts) {
+    // افزودن کلاس اختصاصی یوتیوب برای قرارگیری درست در ستون فلكس
+    toggleBtn.classList.add('ytwReelActionBarViewModelHostDesktopActionButton');
+
+    if (shortsLikeBtn) {
+      let targetNode = shortsLikeBtn;
+      while (targetNode && targetNode.parentElement !== controls) {
+        targetNode = targetNode.parentElement;
+      }
+      if (targetNode && targetNode.parentElement === controls) {
+        if (toggleBtn.nextSibling !== targetNode) {
+          controls.insertBefore(toggleBtn, targetNode);
+        }
+      } else {
+        if (toggleBtn.parentElement !== controls || controls.firstChild !== toggleBtn) {
+          controls.prepend(toggleBtn);
+        }
+      }
+    } else {
+      if (toggleBtn.parentElement !== controls || controls.firstChild !== toggleBtn) {
+        controls.prepend(toggleBtn);
+      }
+    }
+  } else {
+    toggleBtn.classList.remove('ytwReelActionBarViewModelHostDesktopActionButton');
+    if (toggleBtn.parentElement !== controls) {
+      controls.prepend(toggleBtn);
+    }
   }
 
   toggleBtn.style.display = '';
 }
 
+function scheduleEnsureToggleBtn() {
+  if (ensureToggleBtnFrame !== null) return;
+  ensureToggleBtnFrame = requestAnimationFrame(() => {
+    ensureToggleBtnFrame = null;
+    ensureToggleBtn();
+  });
+}
+
+const playerControlsObserver = new MutationObserver(() => {
+  if (!settings.enabled || !isYouTubeVideoPage()) return;
+  scheduleEnsureToggleBtn();
+});
+
+playerControlsObserver.observe(document.documentElement, {
+  childList: true,
+  subtree: true,
+  attributes: true,
+  attributeFilter: ['is-active', 'class']
+});
+
 function updateToggleBtn() {
+  if (!isYouTubeVideoPage()) {
+    if (toggleBtn) toggleBtn.style.display = 'none';
+    return;
+  }
   if (!toggleBtn) {
     ensureToggleBtn();
     if (!toggleBtn) return;
@@ -209,17 +457,24 @@ function updateToggleBtn() {
   }
 }
 
-function onToggleBtnClick() {
-  if (state.loading) return; 
+async function reloadSubtitles() {
+  bootFailed = false;
+  subtitleVisible = true;
+  state.videoId = null;
+  state.cues = [];
+  state.currentIndex = -1;
+  state.activeVideo = null;
+  updateToggleBtn();
+  await boot({ silent: false });
+}
+
+async function onToggleBtnClick() {
+  if (state.loading) return;
 
   if (bootFailed || !state.cues.length) {
-    bootFailed = false;
-    subtitleVisible = true;
-    state.videoId = null; 
-    state.cues = [];
-    state.currentIndex = -1;
-    updateToggleBtn();
-    boot({ silent: false });
+    await reloadSubtitles();
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    await reloadSubtitles();
     return;
   }
 
@@ -230,8 +485,8 @@ function onToggleBtnClick() {
       const idx = findCue(video.currentTime);
       if (idx !== -1) showCue(state.cues[idx]);
     }
-  } else {
-    if (bar) bar.classList.remove('ytfa-visible');
+  } else if (bar) {
+    bar.classList.remove('ytfa-visible');
   }
   updateToggleBtn();
 }
@@ -262,7 +517,8 @@ function applyStyles() {
 }
 
 function showCue(cue) {
-  ensureBar();
+  if (!isYouTubeVideoPage()) return;
+  if (!ensureBar()) return;
   attachBar();
   faEl.textContent = cue.fa || '…';
   origEl.textContent = cue.text || '';
@@ -331,35 +587,38 @@ async function fetchCues(url) {
 }
 
 function groupCuesByRPM(cues, rpm) {
-  const multiplier = 3; 
-  const minDuration = (60 / rpm) * multiplier; 
+  const multiplier = 3;
+  const minDuration = (60 / rpm) * multiplier;
   const batches = [];
-  if (!cues.length) return batches;
+  let texts = [];
+  let indices = [];
+  let batchStartTime = null;
 
-  let currentTexts = [];
-  let startIdx = 0;
-  let batchStartTime = cues[0].start;
+  const flushBatch = () => {
+    if (!indices.length) return;
+    batches.push({
+      texts,
+      indices,
+      startIdx: indices[0],
+      endIdx: indices[indices.length - 1],
+    });
+    texts = [];
+    indices = [];
+    batchStartTime = null;
+  };
 
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
-    currentTexts.push(cue.text);
+    if (cue.fa !== '') continue;
+    if (batchStartTime === null) batchStartTime = cue.start;
+
+    texts.push(cue.text);
+    indices.push(i);
     const duration = cue.end - batchStartTime;
-
-    if (duration >= minDuration || i === cues.length - 1 || currentTexts.length >= 25) {
-      batches.push({
-        texts: currentTexts,
-        startIdx: startIdx,
-        endIdx: i
-      });
-
-      startIdx = i + 1;
-      currentTexts = [];
-      if (i + 1 < cues.length) {
-        batchStartTime = cues[i + 1].start;
-      }
-    }
+    if (duration >= minDuration || texts.length >= 25) flushBatch();
   }
 
+  flushBatch();
   return batches;
 }
 
@@ -374,7 +633,8 @@ function stopTranslation() {
 }
 
 async function translateAll() {
-  if (!settings.enabled) {
+  // اگر افزونه خاموش باشد، صفحه یوتیوب نباشد یا تب در پس‌زمینه (مخفی) باشد، ترجمه متوقف می‌شود
+  if (!settings.enabled || !isYouTubeVideoPage() || document.hidden) {
     stopTranslation();
     return;
   }
@@ -382,6 +642,9 @@ async function translateAll() {
   if (isTranslating) return;
 
   const currentSessionId = state.translationSessionId;
+  const translationVideoId = state.videoId || currentVideoId;
+  applyCachedCaptions(translationVideoId, state.cues);
+
   const rpm = settings.rpm || 15;
   activeBatches = groupCuesByRPM(state.cues, rpm);
   isTranslating = true;
@@ -389,7 +652,8 @@ async function translateAll() {
   let notifiedError = false;
 
   while (isTranslating && currentSessionId === state.translationSessionId) {
-    if (!settings.enabled) {
+    // بررسی مجدد فعال بودن تب و تنظیمات در هر دور حلقه
+    if (!settings.enabled || document.hidden) {
       stopTranslation();
       break;
     }
@@ -400,6 +664,7 @@ async function translateAll() {
     const video = getVideo();
     const currentTime = video ? video.currentTime : 0;
 
+    // اولویت‌بندی ارسال درخواست بر اساس بازه زمانی فعلی ویدیو
     untranslated.sort((a, b) => {
       const startA = state.cues[a.startIdx].start;
       const endA = state.cues[a.endIdx].end;
@@ -421,7 +686,7 @@ async function translateAll() {
     });
 
     const batch = untranslated[0];
-    const { texts, startIdx, endIdx } = batch;
+    const { texts, indices, startIdx, endIdx } = batch;
 
     const ERROR_MESSAGES = {
       ERR_429: 'به محدودیت تعداد درخواست هوش مصنوعی (ارور ۴۲۹) برخوردید. لطفاً چند لحظه صبر کنید یا محدودیت RPM را در تنظیمات کاهش دهید.',
@@ -433,17 +698,27 @@ async function translateAll() {
 
     let hasError = false;
     try {
-      if (!settings.enabled || currentSessionId !== state.translationSessionId) break;
+      if (!settings.enabled || currentSessionId !== state.translationSessionId || document.hidden) {
+        stopTranslation();
+        break;
+      }
+
       const resp = await chrome.runtime.sendMessage({ type: 'TRANSLATE', texts });
-      if (!settings.enabled || currentSessionId !== state.translationSessionId) break;
+
+      if (!settings.enabled || currentSessionId !== state.translationSessionId || document.hidden) {
+        stopTranslation();
+        break;
+      }
 
       if (resp?.ok) {
         if (currentSessionId === state.translationSessionId) {
           resp.translations.forEach((fa, j) => {
-            const cueIdx = startIdx + j;
-            if (state.cues[cueIdx]) {
+            const cueIdx = indices[j];
+            const cue = state.cues[cueIdx];
+            if (cue) {
               // برای جلوگیری از گیر کردن، اگر ترجمه خالی بود یک فاصله قرار می‌دهیم
-              state.cues[cueIdx].fa = fa ? fa : ' ';
+              cue.fa = fa ? fa : ' ';
+              cacheCaption(translationVideoId, cue.text, cue.fa);
               if (!fa) console.warn(`[ytfa] Empty translation for cue ${cueIdx}`);
             }
           });
@@ -451,7 +726,8 @@ async function translateAll() {
             showCue(state.cues[state.currentIndex]);
           }
         }
-      } else if (resp?.error === 'APP_DISABLED') {
+      } else if (resp?.error === 'APP_DISABLED' || resp?.error === 'TAB_INACTIVE') {
+        // اگر افزونه خاموش باشد یا تب غیرفعال باشد، حلقه ترجمه فوراً متوقف می‌شود
         if (currentSessionId === state.translationSessionId) stopTranslation();
         return;
       } else if (resp?.error === 'NO_API_KEY') {
@@ -495,7 +771,7 @@ async function translateAll() {
 
     if (hasError) {
       await new Promise(resolve => setTimeout(resolve, 3000));
-      if (!settings.enabled || currentSessionId !== state.translationSessionId) break;
+      if (!settings.enabled || currentSessionId !== state.translationSessionId || document.hidden) break;
     }
   }
 
@@ -505,23 +781,37 @@ async function translateAll() {
 }
 
 function isBatchTranslated(batch) {
-  for (let i = batch.startIdx; i <= batch.endIdx; i++) {
-    if (state.cues[i] && state.cues[i].fa === '') return false;
-  }
-  return true;
+  return batch.indices.every((index) => state.cues[index]?.fa !== '');
 }
 
 /* --------------------------- playback sync --------------------------- */
 
 function getVideo() {
-  return document.querySelector('video.html5-main-video, video');
+  return getActiveVideo();
 }
 
 function syncLoop() {
   state.rafId = requestAnimationFrame(syncLoop);
-  if (!settings.enabled || !state.cues.length) return;
+  if (!settings.enabled) return;
+
+  if (isYouTubeVideoPage()) scheduleEnsureToggleBtn();
+
+  const urlVideoId = getVideoIdFromUrl();
+  if (urlVideoId !== currentVideoId) {
+    onNavigate();
+    return;
+  }
+  if (!isYouTubeVideoPage() || !state.cues.length) return;
+
   const video = getVideo();
-  if (!video) return;
+  if (!video) {
+    hideBar();
+    return;
+  }
+  if (state.activeVideo && video !== state.activeVideo) {
+    hideBar();
+    return;
+  }
   const t = video.currentTime;
 
   const idx = findCue(t);
@@ -576,7 +866,7 @@ let notifyEl;
 let notifyTimeout = null;
 
 function notify(text) {
-  if (!settings.enabled) return;
+  if (!settings.enabled || !isYouTubeVideoPage()) return;
   if (!notifyEl) {
     notifyEl = document.createElement('div');
     notifyEl.id = 'ytfa-toast';
@@ -597,14 +887,15 @@ function notify(text) {
 }
 
 async function boot({ silent = false } = {}) {
-  if (!location.pathname.startsWith('/watch')) {
-    hideBar();
+  if (!isYouTubeVideoPage()) {
+    cleanupPageUi();
     return;
   }
   if (!settings.enabled) return;
   if (state.loading) return;
 
   const generation = ++bootGeneration;
+  const expectedVideoId = getVideoIdFromUrl();
   state.loading = true;
   updateToggleBtn(); 
 
@@ -612,6 +903,11 @@ async function boot({ silent = false } = {}) {
   try {
     const { videoId, url, tracks } = await requestCaptions();
     if (!settings.enabled || generation !== bootGeneration) return;
+    if (getVideoIdFromUrl() !== expectedVideoId ||
+        (expectedVideoId && videoId !== expectedVideoId)) {
+      console.warn('[ytfa] ignored stale caption response:', videoId, expectedVideoId);
+      return;
+    }
     if (!videoId) {
       if (!silent) bootFailed = true;
       return;
@@ -622,8 +918,10 @@ async function boot({ silent = false } = {}) {
     }
 
     state.videoId = videoId;
+    currentVideoId = videoId;
     state.cues = [];
     state.currentIndex = -1;
+    state.activeVideo = getVideo();
 
     if (!tracks || !tracks.length) {
       if (!silent) {
@@ -634,13 +932,14 @@ async function boot({ silent = false } = {}) {
     }
     if (!url) {
       if (!silent) {
-        notify('دریافت زیرنویس از یوتیوب ناموفق بود؛ مطمئن شوید زیرنویس خودکار روشن است و دکمه ریلود در گوشه ویدیو را بزنید.');
+        notify('دریافت زیرنویس از یوتیوب ناموفق بود؛ مطمئن شوید زیرنویس خودکار روشن است و دکمه ریلود در کنار دکمه سابتایتل را بزنید.');
         bootFailed = true;
       }
       return;
     }
     state.cues = await fetchCues(url);
     if (!settings.enabled || generation !== bootGeneration) return;
+    applyCachedCaptions(videoId, state.cues);
     if (!state.cues.length) {
       if (!silent) {
         notify('زیرنویسی برای ترجمه پیدا نشد.');
@@ -663,24 +962,67 @@ async function boot({ silent = false } = {}) {
 
 /* ----------------------- navigation handling ------------------------- */
 
-function onNavigate() {
-  bootGeneration++;
-  state.loading = false;
-  stopTranslation();
-  state.videoId = null;
-  state.cues = [];
-  state.currentIndex = -1;
-  bootFailed = false;
-  subtitleVisible = true; 
+function cleanupPageUi() {
   hideBar();
-  updateToggleBtn(); 
-  if (!settings.enabled) return;
-  setTimeout(() => {
-    if (settings.enabled) boot({ silent: false });
-  }, 800);
+  if (faEl) faEl.textContent = '';
+  if (origEl) origEl.textContent = '';
+  if (bar?.parentElement) bar.parentElement.classList.remove('ytfa-on');
+  if (toggleBtn) toggleBtn.style.display = 'none';
+  if (notifyEl) notifyEl.classList.remove('ytfa-visible');
+  if (notifyTimeout) {
+    clearTimeout(notifyTimeout);
+    notifyTimeout = null;
+  }
+}
+
+const MAX_NAVIGATION_BOOT_RETRIES = 10;
+let navigationBootTimer = null;
+
+function scheduleNavigationBoot(videoId, attempt = 0) {
+  if (!videoId || navigationBootTimer) return;
+
+  navigationBootTimer = setTimeout(async () => {
+    navigationBootTimer = null;
+    if (!settings.enabled || getVideoIdFromUrl() !== videoId) return;
+
+    await boot({ silent: attempt < MAX_NAVIGATION_BOOT_RETRIES - 1 });
+    if (getVideoIdFromUrl() === videoId && !state.cues.length &&
+        attempt + 1 < MAX_NAVIGATION_BOOT_RETRIES) {
+      scheduleNavigationBoot(videoId, attempt + 1);
+    }
+  }, attempt === 0 ? 300 : 700);
+}
+
+function onNavigate() {
+  const nextVideoId = getVideoIdFromUrl();
+  const videoChanged = nextVideoId !== currentVideoId;
+
+  if (videoChanged || !isYouTubeVideoPage()) {
+    if (navigationBootTimer) {
+      clearTimeout(navigationBootTimer);
+      navigationBootTimer = null;
+    }
+    bootGeneration++;
+    state.loading = false;
+    stopTranslation();
+    state.videoId = null;
+    state.cues = [];
+    state.currentIndex = -1;
+    state.activeVideo = null;
+    bootFailed = false;
+    subtitleVisible = true;
+    cleanupPageUi();
+    currentVideoId = nextVideoId;
+  }
+
+  if (!settings.enabled || !isYouTubeVideoPage()) return;
+  ensureToggleBtn();
+  if (!videoChanged && (state.loading || state.cues.length)) return;
+  scheduleNavigationBoot(nextVideoId);
 }
 
 document.addEventListener('yt-navigate-finish', onNavigate);
+window.addEventListener('popstate', onNavigate);
 window.addEventListener('yt-page-data-updated', onNavigate);
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -690,10 +1032,11 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         hideBar();
         stopTranslation();
         if (toggleBtn) toggleBtn.style.display = 'none';
-      } else {
+      } else if (isYouTubeVideoPage()) {
         attachBar();
         applyStyles();
         if (state.cues.length) {
+          captionCache.clear();
           state.cues.forEach(c => c.fa = '');
           // توقف ترجمه قبلی تا تنظیمات و کلیدهای جدید اعمال شوند
           stopTranslation();
@@ -701,6 +1044,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         } else if (!state.loading) {
           boot();
         }
+      } else {
+        cleanupPageUi();
       }
       sendResponse({ ok: true });
     });
@@ -712,7 +1057,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   loadFonts(); 
   await loadSettings();
   syncLoop();
-  updateToggleBtn();
+  if (isYouTubeVideoPage()) updateToggleBtn();
 
   let tries = 0;
   const MAX_TRIES = 10;
@@ -721,6 +1066,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       clearInterval(iv);
       return;
     }
+    if (!isYouTubeVideoPage()) return;
     tries++;
     if (state.cues.length) {
       clearInterval(iv);
@@ -732,7 +1078,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         if (!settings.enabled) return;
         if (!state.cues.length) {
           bootFailed = true;
-          notify('دریافت زیرنویس از یوتیوب ناموفق بود؛کمی صبر کنید و دکمه ریلود در گوشه ویدیو را فشار دهید.');
+          notify('دریافت زیرنویس از یوتیوب ناموفق بود؛کمی صبر کنید و دکمه ریلود در کنار دکمه سابتایتل را فشار دهید.');
           updateToggleBtn();
         }
       });
@@ -741,3 +1087,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     boot({ silent: true });
   }, 1000);
 })();
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && settings.enabled && isYouTubeVideoPage()) {
+    if (state.cues.length) {
+      if (!isTranslating) translateAll();
+    } else if (!state.loading) {
+      boot({ silent: true });
+    }
+  } else if (document.hidden) {
+    stopTranslation();
+  }
+});

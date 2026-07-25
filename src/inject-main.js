@@ -29,6 +29,15 @@
     }
   }
 
+  function captionUrlMatchesVideo(url, videoId) {
+    if (!url || !videoId) return false;
+    try {
+      return new URL(url, location.origin).searchParams.get('v') === videoId;
+    } catch (_) {
+      return false;
+    }
+  }
+
   function capture(u) {
     const n = normalizeToJson3(u);
     if (!n) return;
@@ -72,8 +81,50 @@
     });
   }
 
+  function getActiveReelPlayer() {
+    if (!location.pathname.startsWith('/shorts/')) return null;
+
+    const candidates = Array.from(
+      document.querySelectorAll('ytd-reel-video-renderer')
+    ).map((renderer) => {
+      const video = renderer.querySelector('video.html5-main-video, video');
+      const player = renderer.querySelector('.html5-video-player');
+      const rect = renderer.getBoundingClientRect();
+      const visibleWidth = Math.max(
+        0,
+        Math.min(rect.right, window.innerWidth) - Math.max(rect.left, 0)
+      );
+      const visibleHeight = Math.max(
+        0,
+        Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+      );
+      return {
+        renderer,
+        video,
+        player,
+        visibleArea: visibleWidth * visibleHeight,
+        centerDistance: Math.abs((rect.top + rect.bottom) / 2 - window.innerHeight / 2),
+      };
+    }).filter((candidate) => candidate.video && candidate.player &&
+      candidate.visibleArea > 0);
+
+    candidates.sort((a, b) => {
+      const aPlaying = !a.video.paused && !a.video.ended ? 1 : 0;
+      const bPlaying = !b.video.paused && !b.video.ended ? 1 : 0;
+      if (aPlaying !== bPlaying) return bPlaying - aPlaying;
+      if (a.visibleArea !== b.visibleArea) return b.visibleArea - a.visibleArea;
+      if (a.centerDistance !== b.centerDistance) return a.centerDistance - b.centerDistance;
+      return Number(b.renderer.hasAttribute('is-active')) -
+        Number(a.renderer.hasAttribute('is-active'));
+    });
+
+    return candidates[0]?.player || null;
+  }
+
   function getContext() {
-    const player = document.getElementById('movie_player');
+    const player = getActiveReelPlayer() ||
+      document.getElementById('movie_player') ||
+      document.querySelector('.html5-video-player');
     let resp = null;
     if (player && typeof player.getPlayerResponse === 'function') {
       try {
@@ -97,7 +148,17 @@
     );
   }
 
-  async function captureCaptionUrl(player) {
+  async function captureCaptionUrl(player, expectedVideoId) {
+    let playerVideoId = expectedVideoId || null;
+    if (!playerVideoId) {
+      try {
+        playerVideoId = player.getPlayerResponse()?.videoDetails?.videoId || null;
+      } catch (_) {}
+    }
+    const existingUrl = captionUrlMatchesVideo(lastTimedText, playerVideoId)
+      ? lastTimedText
+      : null;
+
     // Prefer the player's own tracklist for setOption (correct object shape).
     let tracklist = [];
     try {
@@ -116,20 +177,24 @@
     }
 
     const track = pickTrack(tracklist);
-    if (!track) return { url: lastTimedText, track: null };
+    if (!track) return { url: existingUrl, track: null };
 
     lastTimedText = null;
     let url = null;
     try {
       player.setOption('captions', 'track', track); // forces the player to fetch
-      url = await waitForUrl(5000);
+      const capturedUrl = await waitForUrl(5000);
+      if (captionUrlMatchesVideo(capturedUrl, playerVideoId)) url = capturedUrl;
     } catch (_) {}
     // Turn the native caption overlay back off (we render our own).
     try {
       player.setOption('captions', 'track', {});
     } catch (_) {}
 
-    return { url: url || lastTimedText, track };
+    const latestUrl = captionUrlMatchesVideo(lastTimedText, playerVideoId)
+      ? lastTimedText
+      : null;
+    return { url: url || latestUrl || existingUrl, track };
   }
 
   window.addEventListener('message', async (event) => {
@@ -146,7 +211,7 @@
       return;
     }
 
-    const { url, track } = await captureCaptionUrl(player);
+    const { url, track } = await captureCaptionUrl(player, videoId);
     window.postMessage(
       {
         channel: RES,

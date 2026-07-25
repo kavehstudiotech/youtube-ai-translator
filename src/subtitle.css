@@ -72,14 +72,13 @@
   transform: translateY(0);
 }
 
-/* ─── Floating toggle / retry button ─────────────────────────────────────── */
+/* ─── Player-controls toggle / retry button ──────────────────────────────── */
 
 #ytfa-toggle-btn {
-  position: absolute;
-  bottom: 54px;           /* just above the YouTube control bar */
-  left: 12px;
-  width: 36px;
-  height: 36px;
+  position: relative;
+  width: 40px;
+  height: 100%;
+  flex: 0 0 40px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
@@ -89,7 +88,7 @@
   font-size: 17px;
   line-height: 1;
   z-index: 70;
-  opacity: 0.72;
+  opacity: 0.85;
   transition: opacity 0.18s ease, transform 0.18s ease, background 0.22s ease,
               box-shadow 0.22s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
@@ -169,4 +168,58 @@
 }
 #ytfa-toggle-btn:hover::after {
   opacity: 1;
+}
+
+/* ─── استایل دقیق شورتس بر اساس reel-action-bar-view-model ─── */
+
+#ytfa-toggle-btn.ytfa-shorts-btn {
+  position: relative !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  max-width: 48px !important;
+  max-height: 48px !important;
+  flex: 0 0 48px !important;
+  margin: 0 0 12px 0 !important;
+  padding: 0 !important;
+  font-size: 20px !important;
+  border-radius: 50% !important;
+  align-self: center !important;
+  justify-self: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  z-index: 999 !important;
+  cursor: pointer !important;
+}
+
+#ytfa-toggle-btn.ytfa-shorts-btn .ytfa-btn-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-size: 20px !important;
+}
+
+/* جهت نمایش راهنما (Tooltip) در شورتس انگلیسی */
+#ytfa-toggle-btn.ytfa-shorts-btn::after {
+  bottom: auto !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  right: calc(100% + 12px) !important;
+  left: auto !important;
+  z-index: 1000 !important;
+}
+
+/* جهت نمایش راهنما (Tooltip) در شورتس فارسی (راست‌چین) */
+[dir="rtl"] #ytfa-toggle-btn.ytfa-shorts-btn::after,
+html[dir="rtl"] #ytfa-toggle-btn.ytfa-shorts-btn::after {
+  right: auto !important;
+  left: calc(100% + 12px) !important;
 }

@@ -537,7 +537,12 @@ async function openrouterChat({ apiKey, model, system, user, isJson = false }) {
   return data?.choices?.[0]?.message?.content || '';
 }
 
-// --- آپدیت کردن لیسنر پیام‌ها ---
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === 'update') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('public/changelog.html') });
+  }
+});
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === 'TRANSLATE') {
     (async () => {
@@ -547,6 +552,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           sendResponse({ ok: false, error: 'APP_DISABLED' });
           return;
         }
+
+        // اگر درخواست از تبی بیاید که در حال حاضر اکتیو/فعال نیست، آن را رد کن
+        if (sender?.tab && sender.tab.active === false) {
+          sendResponse({ ok: false, error: 'TAB_INACTIVE' });
+          return;
+        }
+
         const out = await translateBatch(msg.texts, cfg);
         sendResponse({ ok: true, translations: out });
       } catch (e) {

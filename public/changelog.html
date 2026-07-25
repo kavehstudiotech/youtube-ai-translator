@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'"
+  />
+  <title>تغییرات نسخه جدید | مترجم فارسی یوتیوب</title>
+  <style>
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("../fonts/Vazirmatn-Regular.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: "Vazirmatn";
+      src: url("../fonts/Vazirmatn-Bold.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: light;
+      --page-bg: #f1f5f9;
+      --page-glow: rgba(13, 148, 136, 0.14);
+      --card-bg: rgba(255, 255, 255, 0.94);
+      --card-border: rgba(13, 148, 136, 0.2);
+      --heading: #0f172a;
+      --text: #334155;
+      --muted: #64748b;
+      --item-bg: #f8fafc;
+      --item-border: #e2e8f0;
+      --accent: #0d9488;
+      --accent-hover: #0f766e;
+      --badge-text: #042f2e;
+      --badge-bg: #99f6e4;
+      --button-text: #042f2e;
+      --shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --page-bg: #0f141c;
+        --page-glow: rgba(0, 229, 204, 0.1);
+        --card-bg: rgba(17, 24, 39, 0.94);
+        --card-border: rgba(45, 212, 191, 0.18);
+        --heading: #f8fafc;
+        --text: #cbd5e1;
+        --muted: #94a3b8;
+        --item-bg: rgba(15, 23, 42, 0.72);
+        --item-border: rgba(148, 163, 184, 0.13);
+        --accent: #00e5cc;
+        --accent-hover: #2dd4bf;
+        --badge-text: #042f2e;
+        --badge-bg: #5eead4;
+        --button-text: #042f2e;
+        --shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 32px 18px;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% 0%, var(--page-glow), transparent 34rem),
+        var(--page-bg);
+      color: var(--text);
+      font-family: "Vazirmatn", Tahoma, sans-serif;
+      line-height: 1.8;
+    }
+
+    .card {
+      position: relative;
+      width: min(100%, 500px);
+      padding: 36px;
+      overflow: hidden;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    header {
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    .version-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      margin-bottom: 14px;
+      padding: 3px 14px;
+      border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      color: var(--heading);
+      font-size: clamp(1.55rem, 5vw, 2rem);
+      line-height: 1.45;
+    }
+
+    .intro {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .changes {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      counter-reset: changes;
+    }
+
+    .change {
+      counter-increment: changes;
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 16px;
+      background: var(--item-bg);
+      border: 1px solid var(--item-border);
+      border-radius: 16px;
+    }
+
+    .change::before {
+      content: counter(changes, persian);
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      margin-top: 2px;
+      border-radius: 50%;
+      background: var(--badge-bg);
+      color: var(--badge-text);
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .change h2 {
+      margin: 0 0 4px;
+      color: var(--heading);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .change p {
+      margin: 0;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    .close-button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 13px 20px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--accent);
+      color: var(--button-text);
+      font: 700 0.98rem/1.6 "Vazirmatn", Tahoma, sans-serif;
+      cursor: pointer;
+      box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 22%, transparent);
+      transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .close-button:hover {
+      transform: translateY(-1px);
+      background: var(--accent-hover);
+      box-shadow: 0 13px 34px color-mix(in srgb, var(--accent) 28%, transparent);
+    }
+
+    .close-button:active {
+      transform: translateY(0);
+    }
+
+    .close-button:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 16px;
+      }
+
+      .card {
+        padding: 28px 20px;
+        border-radius: 20px;
+      }
+
+      .change {
+        padding: 14px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .close-button {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" aria-labelledby="page-title">
+    <header>
+      <span class="version-badge">تغییرات نسخه جدید</span>
+      <h1 id="page-title">مترجم یوتیوب بروزرسانی شد! 🎉</h1>
+      <p class="intro">نسخه جدید با امکانات بیشتر و تجربه‌ای سریع‌تر آماده است.</p>
+    </header>
+
+    <ol class="changes" aria-label="فهرست تغییرات">
+      <li class="change">
+        <div>
+          <h2>پشتیبانی کامل از یوتیوب شورتس (YouTube Shorts)</h2>
+          <p>امکان ترجمه هوشمند و نمایش همزمان زیرنویس فارسی روی ویدیوهای شورتس (<bdi dir="ltr">/shorts/</bdi>).</p>
+        </div>
+      </li>
+      <li class="change">
+        <div>
+          <h2>بهینه‌سازی حافظه و کش (LRU Caching)</h2>
+          <p>عدم ترجمه مجدد زیرنویس‌های قبلی هنگام مرور بین ویدیوها جهت صرفه‌جویی در مصرف API و افزایش سرعت.</p>
+        </div>
+      </li>
+      <li class="change">
+        <div>
+          <h2>رفع باگ‌ها و بهبود پایداری</h2>
+          <p>برطرف شدن مشکلات ناوبری، رفع ماندگاری زیرنویس‌های قبلی هنگام رفتن به ویدیوی بعدی و ارتقای عملکرد کلی.</p>
+        </div>
+      </li>
+    </ol>
+
+    <button id="btn-close-tab" class="close-button" type="button">فهمیدم و بستن تب</button>
+  </main>
+
+  <script src="changelog.js"></script>
+</body>
+</html>
