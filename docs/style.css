@@ -730,3 +730,20 @@ h1, h2, h3, h4, h5, h6, p {
 .list-inside { list-style-position: inside; }
 .list-outside { list-style-position: outside; }
 
+/* Blog Card Polish & Animation Helpers */
+.aspect-video { aspect-ratio: 16 / 9; }
+.aspect-\[16\/10\] { aspect-ratio: 16 / 10; }
+.bg-\[\#0c121e\] { background-color: #0c121e; }
+.bg-\[\#0c121e\]\/80 { background-color: rgba(12, 18, 30, 0.8); }
+.bg-\[\#0c121e\]\/90 { background-color: rgba(12, 18, 30, 0.9); }
+.bg-\[\#0d1527\] { background-color: #0d1527; }
+.border-white\/15 { border-color: rgba(255, 255, 255, 0.15); }
+.object-cover { object-fit: cover; }
+.h-full { height: 100%; }
+.hover\:-translate-y-1\.5:hover { transform: translateY(-0.375rem); }
+.group:hover .group-hover\:-translate-x-1 { transform: translateX(-0.25rem); }
+.group:hover .group-hover\:scale-105 { transform: scale(1.05); }
+.hover\:shadow-\[0_15px_35px_rgba\(0\,242\,254\,0\.15\)\]:hover { box-shadow: 0 15px 35px rgba(0, 242, 254, 0.15); }
+.hover\:border-transparent:hover { border-color: transparent; }
+
+
