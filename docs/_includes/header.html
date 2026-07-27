@@ -1,0 +1,78 @@
+<!-- Header / Floating Glass Navbar -->
+<header class="sticky top-3 sm:top-5 z-50 max-w-5xl mx-auto px-4">
+    <div
+        class="bg-[#0b0f17]/70 backdrop-blur-xl border border-white/10 rounded-full px-4 sm:px-6 py-2.5 sm:py-3 shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex justify-between items-center transition-all duration-300">
+        <!-- Brand Logo -->
+        <a href="/" class="text-base sm:text-lg font-bold text-white flex items-center gap-2.5 group">
+            <div
+                class="w-8 h-8 sm:w-9 sm:h-9 bg-white/5 border border-white/10 rounded-full flex items-center justify-center shadow-lg group-hover:border-[#00f2fe]/60 transition duration-300">
+                <i class="fa-solid fa-play text-[#00f2fe] drop-shadow-md text-xs sm:text-sm"></i>
+            </div>
+            <span>مترجم <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#10b981] font-extrabold">یوتیوب</span></span>
+        </a>
+
+        <!-- Desktop Nav Links -->
+        <nav class="hidden md:flex items-center gap-7 text-sm font-semibold text-gray-300">
+            <a href="/#features" class="hover:text-[#00f2fe] transition py-1">ویژگی‌ها</a>
+            <a href="/#how-it-works" class="hover:text-[#00f2fe] transition py-1">آموزش نصب</a>
+            <a href="/#faq" class="hover:text-[#00f2fe] transition py-1">سوالات متداول</a>
+            <a href="/#about" class="hover:text-[#00f2fe] transition py-1">درباره ما</a>
+            <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="hover:text-[#00f2fe] transition py-1">وبلاگ</a>
+        </nav>
+
+        <!-- Desktop CTA -->
+        <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
+            target="_blank" rel="nofollow"
+            class="hidden sm:inline-flex items-center justify-center bg-gradient-to-r from-[#00f2fe] to-[#6157ff] text-white px-4 sm:px-5 py-2 rounded-full font-bold text-xs sm:text-sm shadow-[0_0_15px_rgba(0,242,254,0.3)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] transition transform hover:scale-105 active:scale-95 border border-white/20">
+            <i class="fa-brands fa-chrome text-sm ml-1.5"></i>
+            نصب روی کروم
+        </a>
+
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobile-menu-btn" type="button" aria-label="منوی سایت" aria-expanded="false"
+            class="md:hidden w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-300 hover:text-[#00f2fe] focus:outline-none transition">
+            <i id="mobile-menu-icon" class="fa-solid fa-bars text-sm"></i>
+        </button>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div id="mobile-menu"
+        class="hidden md:hidden border border-white/10 bg-[#0b0f17]/95 backdrop-blur-2xl px-4 pt-3 pb-6 mt-2 rounded-2xl transition-all duration-300 shadow-2xl">
+        <nav class="flex flex-col space-y-1 font-semibold text-gray-300">
+            <a href="/#features"
+                class="mobile-nav-link py-3 px-4 rounded-xl hover:bg-white/5 hover:text-[#00f2fe] transition flex items-center justify-between text-sm">
+                <span>ویژگی‌ها</span>
+                <i class="fa-solid fa-chevron-left text-xs text-gray-500"></i>
+            </a>
+            <a href="/#how-it-works"
+                class="mobile-nav-link py-3 px-4 rounded-xl hover:bg-white/5 hover:text-[#00f2fe] transition flex items-center justify-between text-sm">
+                <span>آموزش نصب</span>
+                <i class="fa-solid fa-chevron-left text-xs text-gray-500"></i>
+            </a>
+            <a href="/#faq"
+                class="mobile-nav-link py-3 px-4 rounded-xl hover:bg-white/5 hover:text-[#00f2fe] transition flex items-center justify-between text-sm">
+                <span>سوالات متداول</span>
+                <i class="fa-solid fa-chevron-left text-xs text-gray-500"></i>
+            </a>
+            <a href="/#about"
+                class="mobile-nav-link py-3 px-4 rounded-xl hover:bg-white/5 hover:text-[#00f2fe] transition flex items-center justify-between text-sm">
+                <span>درباره ما</span>
+                <i class="fa-solid fa-chevron-left text-xs text-gray-500"></i>
+            </a>
+            <a href="/blog/how-to-enable-persian-subtitles-youtube.html"
+                class="mobile-nav-link py-3 px-4 rounded-xl hover:bg-white/5 hover:text-[#00f2fe] transition flex items-center justify-between text-sm">
+                <span>وبلاگ</span>
+                <i class="fa-solid fa-chevron-left text-xs text-gray-500"></i>
+            </a>
+        </nav>
+        <div class="mt-4 pt-4 border-t border-white/10">
+            <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
+                target="_blank" rel="nofollow"
+                class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#00f2fe] to-[#6157ff] text-white px-5 py-3 rounded-xl font-bold shadow-lg text-sm transition active:scale-95 border border-white/20">
+                <i class="fa-brands fa-chrome text-base"></i>
+                نصب مستقیم روی کروم
+            </a>
+        </div>
+    </div>
+</header>

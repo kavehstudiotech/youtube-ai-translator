@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" class="overflow-x-hidden">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 
     <!-- SEO Meta Tags -->
     <title>مترجم فارسی یوتیوب | افزونه ترجمه همزمان با هوش مصنوعی</title>
@@ -23,58 +23,8 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Vazirmatn', 'sans-serif'] },
-                    colors: {
-                        primary: '#1ee1c8',
-                        primaryHover: '#15bda7',
-                        darkBg: '#121212',
-                        cardBg: '#1e1e1e',
-                        darkBorder: '#333333'
-                    },
-                    boxShadow: {
-                        'neon': '0 0 15px rgba(30, 225, 200, 0.4)',
-                        'neon-strong': '0 0 25px rgba(30, 225, 200, 0.7)',
-                        'glow-text': '0 0 10px rgba(30, 225, 200, 0.8)'
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background-color: #121212;
-            color: #e5e7eb;
-        }
-
-        .faq-answer {
-            display: none;
-        }
-
-        .faq-active .faq-answer {
-            display: block;
-        }
-
-        .faq-active .fa-chevron-down {
-            transform: rotate(180deg);
-            transition: 0.3s;
-            color: #1ee1c8;
-        }
-
-        .text-glow {
-            text-shadow: 0 0 12px rgba(30, 225, 200, 0.6);
-        }
-    </style>
+    <!-- Main Optimized Stylesheet -->
+    <link rel="stylesheet" href="style.css">
 
     <!-- Schema Markup Optimized -->
     <script type="application/ld+json">
@@ -144,137 +94,235 @@
     <meta name="google-site-verification" content="v3eJlTY8aT957tjiy7-wByNzVcRVyIetwOzPL7kHMRg" />
 </head>
 
-<body class="font-sans antialiased selection:bg-primary selection:text-black">
+<body class="font-sans antialiased selection:bg-[#00f2fe] selection:text-black overflow-x-hidden">
 
-    <!-- Header / Navbar -->
-    <header class="bg-darkBg/90 backdrop-blur-md border-b border-darkBorder sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="text-xl font-bold text-white flex items-center gap-3">
-                <div
-                    class="w-10 h-10 bg-[#1a1a1a] border border-gray-700 rounded-xl flex items-center justify-center shadow-neon">
-                    <i class="fa-solid fa-play text-primary drop-shadow-md"></i>
-                </div>
-                مترجم <span class="text-primary text-glow">یوتیوب</span>
-            </div>
-            <nav class="hidden md:flex gap-6 text-sm font-semibold text-gray-300">
-                <a href="#features" class="hover:text-primary transition">ویژگی‌ها</a>
-                <a href="#how-it-works" class="hover:text-primary transition">آموزش نصب</a>
-                <a href="#faq" class="hover:text-primary transition">سوالات متداول</a>
-                <a href="#about" class="hover:text-primary transition">درباره ما</a>
-            </nav>
-            <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
-                target="_blank" rel="nofollow"
-                class="bg-primary text-gray-900 px-5 py-2 rounded-full font-bold shadow-neon hover:shadow-neon-strong transition transform hover:scale-105">
-                نصب روی کروم
-            </a>
-        </div>
-    </header>
+    <!-- Background Ambient Glow & Vercel Grid -->
+    <div class="fixed inset-0 bg-grid-pattern pointer-events-none z-0"></div>
+    <div class="ambient-blob-cyan"></div>
+    <div class="ambient-blob-purple"></div>
+    <!-- Header / Floating Glass Navbar -->
+    {% include header.html %}
 
     <!-- Hero Section -->
-    <section class="max-w-6xl mx-auto px-4 py-24 text-center">
+    <section class="relative z-10 max-w-5xl mx-auto px-4 pt-10 sm:pt-16 pb-16 sm:pb-24 text-center">
+        <!-- Top Badge -->
         <div
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cardBg border border-darkBorder text-primary mb-8 text-sm font-bold shadow-sm">
-            <i class="fa-solid fa-bolt text-yellow-400"></i>
-            جدیدترین نسخه با پشتیبانی از هوش مصنوعی منتشر شد
+            class="inline-flex items-center justify-center gap-2.5 px-4 py-2 rounded-full glow-border-badge text-white mb-6 sm:mb-8 text-xs sm:text-sm font-bold max-w-full">
+            <i class="fa-solid fa-bolt text-yellow-400 bolt-pulse-icon shrink-0"></i>
+            <span class="truncate sm:whitespace-normal">جدیدترین نسخه با پشتیبانی از هوش مصنوعی منتشر شد</span>
         </div>
-        <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-6">
-            افزونه مترجم فارسی یوتیوب <br>
-            <span class="text-primary text-glow mt-4 inline-block">با قدرت هوش مصنوعی</span>
+
+        <!-- Headline -->
+        <h1
+            class="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight sm:leading-tight mb-5 sm:mb-7 px-2 tracking-tight">
+            افزونه مترجم فارسی یوتیوب <br class="hidden sm:inline">
+            <span class="text-ai-gradient mt-2 sm:mt-3">با قدرت هوش مصنوعی</span>
         </h1>
-        <p class="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+
+        <!-- Subtitle -->
+        <p
+            class="text-sm sm:text-lg md:text-xl text-gray-300/90 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal px-2">
             بهترین مترجم یوتیوب با هوش مصنوعی برای دیدن ویدیوها با زیرنویس دوزبانه. ایده‌آل برای یادگیری زبان و عبور از
             موانع زبانی با یک کلیک!
         </p>
-        <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
-            target="_blank" rel="nofollow"
-            class="inline-flex items-center gap-3 bg-primary text-gray-900 px-8 py-4 rounded-xl font-extrabold text-lg shadow-neon hover:shadow-neon-strong transition transform hover:-translate-y-1">
-            <i class="fa-brands fa-chrome text-2xl"></i> دانلود افزونه برای کروم (رایگان)
-        </a>
+
+        <!-- CTA Button -->
+        <div class="flex justify-center px-2">
+            <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
+                target="_blank" rel="nofollow"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-3 btn-shimmer px-7 sm:px-9 py-4 sm:py-4.5 rounded-2xl font-extrabold text-base sm:text-lg active:scale-95 border border-white/30">
+                <i class="fa-brands fa-chrome text-xl sm:text-2xl shrink-0"></i>
+                <span>دانلود افزونه برای کروم (رایگان)</span>
+            </a>
+        </div>
+
+        <!-- Trust Badge Section -->
+        <div
+            class="mt-5 sm:mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs sm:text-sm text-gray-400 font-medium px-2">
+            <span
+                class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
+                <i class="fa-solid fa-star text-amber-400 text-xs"></i>
+                <strong class="text-white font-bold">۵/۵</strong> در کروم استور
+            </span>
+            <span class="hidden xs:inline text-gray-600">•</span>
+            <span
+                class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
+                <i class="fa-solid fa-users text-[#00f2fe] text-xs"></i>
+                بیش از <strong class="text-white font-bold">۱۰۰</strong> کاربر فعال
+            </span>
+            <span class="hidden sm:inline text-gray-600">•</span>
+            <span
+                class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
+                <i class="fa-solid fa-bolt text-emerald-400 text-xs"></i>
+                نصب در ۱۰ ثانیه
+            </span>
+        </div>
+
+        <!-- Hero Product Preview Mockup -->
+        <div class="mt-12 sm:mt-16 hero-mockup-wrapper relative max-w-4xl mx-auto px-2">
+
+            <!-- Floating Card 1: Instant AI Translation -->
+            <div
+                class="absolute -top-5 sm:-top-7 -right-2 sm:-right-6 bg-[#0b0f17]/90 backdrop-blur-xl border border-[#00f2fe]/40 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-float-slow z-30">
+                <div
+                    class="w-9 h-9 rounded-xl bg-[#00f2fe]/15 border border-[#00f2fe]/30 flex items-center justify-center text-[#00f2fe] shrink-0">
+                    <i class="fa-solid fa-bolt text-sm"></i>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                        ترجمه آنی با AI
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    </div>
+                    <div class="text-[10px] sm:text-xs text-gray-400">بدون فوت وقت و تأخیر</div>
+                </div>
+            </div>
+
+            <!-- Floating Card 2: 50+ Languages -->
+            <div
+                class="absolute -bottom-5 sm:-bottom-7 -left-2 sm:-left-6 bg-[#0b0f17]/90 backdrop-blur-xl border border-[#6157ff]/40 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-float-delayed z-30">
+                <div
+                    class="w-9 h-9 rounded-xl bg-[#6157ff]/15 border border-[#6157ff]/30 flex items-center justify-center text-[#6157ff] shrink-0">
+                    <i class="fa-solid fa-globe text-sm"></i>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs sm:text-sm font-bold text-white">پشتیبانی از ۵۰+ زبان 🌐</div>
+                    <div class="text-[10px] sm:text-xs text-gray-400">فارسی، انگلیسی، آلمانی...</div>
+                </div>
+            </div>
+
+            <!-- Main Glass Player Mockup Container -->
+            <div class="hero-mockup-card rounded-2xl sm:rounded-3xl overflow-hidden text-right relative">
+
+                <!-- Mockup Chrome / App Top Navigation Bar -->
+                <div class="bg-[#090D16]/90 px-4 py-3 border-b border-white/10 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+                    </div>
+                    <div
+                        class="flex-1 max-w-md mx-auto bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-xs text-gray-400 flex items-center justify-between">
+                        <span class="truncate dir-ltr">youtube.com/watch?v=ai_translator_2026</span>
+                        <i class="fa-solid fa-lock text-[10px] text-emerald-400 ml-1"></i>
+                    </div>
+                    <div class="flex items-center gap-2 text-red-500 text-sm font-bold">
+                        <i class="fa-brands fa-youtube text-lg"></i>
+                        <span class="hidden sm:inline text-xs text-gray-300">YouTube</span>
+                    </div>
+                </div>
+
+                <!-- Real YouTube Video Screenshot Container -->
+                <div class="relative w-full overflow-hidden">
+                    <img src="hero-demo.png" alt="پیش‌نمایش افزونه مترجم هوشمند یوتیوب با زیرنویس دوزبانه" class="w-full h-auto object-cover block rounded-b-2xl sm:rounded-b-3xl">
+                </div>
+            </div>
+
+        </div>
+
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20 border-t border-darkBorder bg-[#161616]">
+    <section id="features"
+        class="relative z-10 py-12 sm:py-20 border-t border-white/10 bg-[#0b0f17]/60 backdrop-blur-md">
         <div class="max-w-6xl mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-16 text-white">چرا این افزونه بهترین انتخاب برای تماشای یوتیوب
-                است؟</h2>
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-10 sm:mb-16 text-white px-2">
+                چرا این افزونه بهترین انتخاب برای تماشای یوتیوب است؟
+            </h2>
 
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
                 <div
-                    class="bg-cardBg p-8 rounded-2xl border border-darkBorder hover:border-primary transition duration-300 hover:shadow-neon group">
+                    class="bg-[#0f172a]/50 p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-[#00f2fe]/50 transition duration-300 hover:shadow-[0_0_25px_rgba(0,242,254,0.15)] group flex flex-col items-start backdrop-blur-sm">
                     <div
-                        class="w-16 h-16 bg-[#121212] border border-darkBorder rounded-xl flex items-center justify-center text-3xl mb-6 group-hover:text-primary text-gray-400 transition">
+                        class="w-14 h-14 sm:w-16 sm:h-16 bg-[#090D16] border border-white/10 rounded-xl flex items-center justify-center text-2xl sm:text-3xl mb-5 sm:mb-6 group-hover:text-[#00f2fe] text-gray-400 transition shrink-0">
                         <i class="fa-solid fa-language"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-4 text-white">زیرنویس دوزبانه؛ ایده‌آل برای یادگیری</h3>
-                    <p class="text-gray-400 leading-relaxed">با نمایش همزمان زیرنویس انگلیسی و فارسی، این افزونه کروم
-                        برای یادگیری زبان با یوتیوب به یک ابزار بی‌رقیب تبدیل شده است.</p>
+                    <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">زیرنویس دوزبانه؛ ایده‌آل برای
+                        یادگیری</h3>
+                    <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                        با نمایش همزمان زیرنویس انگلیسی و فارسی، این افزونه کروم برای یادگیری زبان با یوتیوب به یک ابزار
+                        بی‌رقیب تبدیل شده است.
+                    </p>
                 </div>
 
                 <div
-                    class="bg-cardBg p-8 rounded-2xl border border-darkBorder hover:border-primary transition duration-300 hover:shadow-neon group">
+                    class="bg-[#0f172a]/50 p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-[#00f2fe]/50 transition duration-300 hover:shadow-[0_0_25px_rgba(0,242,254,0.15)] group flex flex-col items-start backdrop-blur-sm">
                     <div
-                        class="w-16 h-16 bg-[#121212] border border-darkBorder rounded-xl flex items-center justify-center text-3xl mb-6 group-hover:text-primary text-gray-400 transition">
+                        class="w-14 h-14 sm:w-16 sm:h-16 bg-[#090D16] border border-white/10 rounded-xl flex items-center justify-center text-2xl sm:text-3xl mb-5 sm:mb-6 group-hover:text-[#00f2fe] text-gray-400 transition shrink-0">
                         <i class="fa-solid fa-brain"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-4 text-white">ترجمه دقیق‌تر با هوش مصنوعی</h3>
-                    <p class="text-gray-400 leading-relaxed">خداحافظی با ترجمه‌های ماشینی و بی‌معنی! از قدرت درک مطلب
-                        هوش مصنوعی برای ترجمه همزمان ویدیوهای یوتیوب استفاده کنید.</p>
+                    <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">ترجمه دقیق‌تر با هوش مصنوعی</h3>
+                    <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                        خداحافظی با ترجمه‌های ماشینی و بی‌معنی! از قدرت درک مطلب هوش مصنوعی برای ترجمه همزمان ویدیوهای
+                        یوتیوب استفاده کنید.
+                    </p>
                 </div>
 
                 <div
-                    class="bg-cardBg p-8 rounded-2xl border border-darkBorder hover:border-primary transition duration-300 hover:shadow-neon group">
+                    class="bg-[#0f172a]/50 p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-[#00f2fe]/50 transition duration-300 hover:shadow-[0_0_25px_rgba(0,242,254,0.15)] group flex flex-col items-start backdrop-blur-sm">
                     <div
-                        class="w-16 h-16 bg-[#121212] border border-darkBorder rounded-xl flex items-center justify-center text-3xl mb-6 group-hover:text-primary text-gray-400 transition">
+                        class="w-14 h-14 sm:w-16 sm:h-16 bg-[#090D16] border border-white/10 rounded-xl flex items-center justify-center text-2xl sm:text-3xl mb-5 sm:mb-6 group-hover:text-[#00f2fe] text-gray-400 transition shrink-0">
                         <i class="fa-solid fa-microchip"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-4 text-white">مدیریت هوشمند و رایگان ماندن</h3>
-                    <p class="text-gray-400 leading-relaxed">رفع مشکل محدودیت در ترجمه یوتیوب! سیستم هوشمند ما پردازش‌ها
-                        را مدیریت می‌کند تا بتوانید رایگان به تماشای ویدیوها بپردازید.</p>
+                    <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">مدیریت هوشمند و رایگان ماندن</h3>
+                    <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                        رفع مشکل محدودیت در ترجمه یوتیوب! سیستم هوشمند ما پردازش‌ها را مدیریت می‌کند تا بتوانید رایگان
+                        به تماشای ویدیوها بپردازید.
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- How it works -->
-    <section id="how-it-works" class="py-20 bg-darkBg">
-        <div
-            class="max-w-4xl mx-auto px-4 bg-cardBg p-10 rounded-3xl border border-darkBorder relative overflow-hidden">
+    <section id="how-it-works" class="relative z-10 py-12 sm:py-20">
+        <div class="max-w-4xl mx-auto px-4">
             <div
-                class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50">
+                class="bg-[#0f172a]/60 p-6 sm:p-10 rounded-2xl sm:rounded-3xl border border-white/10 relative overflow-hidden backdrop-blur-md shadow-2xl">
+                <div
+                    class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2fe] to-transparent opacity-60">
+                </div>
+
+                <h2
+                    class="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#10b981] text-glow">
+                    آموزش فعال‌سازی زیرنویس فارسی یوتیوب
+                </h2>
+                <p class="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8 text-center">
+                    چگونه زیرنویس یوتیوب را فعال کنیم؟ فقط در ۳ مرحله کوتاه:
+                </p>
+
+                <ol class="space-y-3 sm:space-y-4 text-sm sm:text-lg text-gray-300 font-medium">
+                    <li
+                        class="flex items-start sm:items-center gap-3 sm:gap-4 bg-[#090D16]/80 p-4 sm:p-5 rounded-xl border border-white/10">
+                        <span
+                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm sm:text-base shrink-0 mt-0.5 sm:mt-0">۱</span>
+                        <span class="leading-relaxed">افزونه مترجم فارسی یوتیوب را از Chrome Web Store نصب کنید.</span>
+                    </li>
+                    <li
+                        class="flex items-start sm:items-center gap-3 sm:gap-4 bg-[#090D16]/80 p-4 sm:p-5 rounded-xl border border-white/10">
+                        <span
+                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm sm:text-base shrink-0 mt-0.5 sm:mt-0">۲</span>
+                        <span class="leading-relaxed">وارد یک ویدیوی یوتیوب شوید و روی آیکون افزونه کلیک کنید.</span>
+                    </li>
+                    <li
+                        class="flex items-start sm:items-center gap-3 sm:gap-4 bg-[#090D16]/80 p-4 sm:p-5 rounded-xl border border-white/10">
+                        <span
+                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm sm:text-base shrink-0 mt-0.5 sm:mt-0">۳</span>
+                        <span class="leading-relaxed">زیرنویس (CC) را روشن کرده و از تماشای دوزبانه لذت ببرید.</span>
+                    </li>
+                </ol>
             </div>
-
-            <h2 class="text-2xl md:text-3xl font-bold mb-8 text-center text-primary text-glow">آموزش فعال‌سازی زیرنویس
-                فارسی یوتیوب</h2>
-            <p class="text-gray-400 mb-8 text-center">چگونه زیرنویس یوتیوب را فعال کنیم؟ فقط در ۳ مرحله کوتاه:</p>
-
-            <ol class="space-y-4 text-lg text-gray-300 font-medium">
-                <li class="flex items-center gap-4 bg-[#181818] p-5 rounded-xl border border-darkBorder">
-                    <span
-                        class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">۱</span>
-                    افزونه مترجم فارسی یوتیوب را از Chrome Web Store نصب کنید.
-                </li>
-                <li class="flex items-center gap-4 bg-[#181818] p-5 rounded-xl border border-darkBorder">
-                    <span
-                        class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">۲</span>
-                    وارد یک ویدیوی یوتیوب شوید و روی آیکون افزونه کلیک کنید.
-                </li>
-                <li class="flex items-center gap-4 bg-[#181818] p-5 rounded-xl border border-darkBorder">
-                    <span
-                        class="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold">۳</span>
-                    زیرنویس (CC) را روشن کرده و از تماشای دوزبانه لذت ببرید.
-                </li>
-            </ol>
         </div>
     </section>
 
     <!-- E-E-A-T: Trust & Privacy -->
-    <section id="privacy" class="py-20 bg-[#161616] border-y border-darkBorder relative">
+    <section id="privacy"
+        class="relative z-10 py-12 sm:py-20 bg-[#0b0f17]/60 border-y border-white/10 backdrop-blur-md">
         <div class="max-w-4xl mx-auto px-4 text-center">
             <i
-                class="fa-solid fa-shield-halved text-6xl text-primary mb-6 drop-shadow-[0_0_15px_rgba(30,225,200,0.5)]"></i>
-            <h2 class="text-3xl font-bold mb-6 text-white">حریم خصوصی شما؛ امنیت ۱۰۰٪ تضمین شده</h2>
+                class="fa-solid fa-shield-halved text-4xl sm:text-6xl text-[#00f2fe] mb-4 sm:mb-6 drop-shadow-[0_0_20px_rgba(0,242,254,0.6)]"></i>
+            <h2 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white">حریم خصوصی شما؛ امنیت ۱۰۰٪ تضمین شده</h2>
             <p
-                class="text-xl leading-relaxed text-gray-400 bg-cardBg p-8 rounded-2xl border border-darkBorder border-l-4 border-l-primary">
+                class="text-base sm:text-xl leading-relaxed text-gray-300 bg-[#0f172a]/60 p-6 sm:p-8 rounded-2xl border border-white/10 border-r-4 border-r-[#00f2fe] text-right backdrop-blur-md">
                 «این افزونه هیچ‌گونه اطلاعات شخصی یا کلیدهای API شما را در سرورهای خارجی ذخیره نمی‌کند. همه پردازش‌ها
                 امن و محلی (Local) است.»
             </p>
@@ -282,50 +330,59 @@
     </section>
 
     <!-- FAQ Section -->
-    <section id="faq" class="py-20 bg-darkBg">
+    <section id="faq" class="relative z-10 py-12 sm:py-20">
         <div class="max-w-4xl mx-auto px-4">
-            <h2 class="text-3xl font-bold text-center mb-12 text-white">سوالات متداول (FAQ)</h2>
+            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-white">سوالات متداول (FAQ)</h2>
 
-            <div class="space-y-4">
+            <div class="space-y-3 sm:space-y-4">
                 <div
-                    class="faq-item bg-cardBg border border-darkBorder rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/50">
+                    class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#00f2fe]/50 backdrop-blur-sm">
                     <button
-                        class="w-full px-6 py-5 text-right font-bold text-lg text-gray-200 flex justify-between items-center focus:outline-none"
+                        class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
                         onclick="toggleFaq(this)">
-                        چگونه زیرنویس یوتیوب را فارسی کنیم؟
-                        <i class="fa-solid fa-chevron-down text-gray-500"></i>
+                        <span>چگونه زیرنویس یوتیوب را فارسی کنیم؟</span>
+                        <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                     </button>
-                    <div class="faq-answer px-6 pb-5 text-gray-400 leading-relaxed border-t border-darkBorder pt-4">
-                        با نصب این اکستنشن ترجمه یوتیوب, کافیست وارد ویدیو شوید, آیکون افزونه را بزنید و زبان فارسی را
-                        انتخاب کنید تا زیرنویس به صورت دوزبانه و همزمان نمایش داده شود.
+                    <div
+                        class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                        <div class="pt-4 pb-5">
+                            با نصب این اکستنشن ترجمه یوتیوب, کافیست وارد ویدیو شوید, آیکون افزونه را بزنید و زبان فارسی
+                            را انتخاب کنید تا زیرنویس به صورت دوزبانه و همزمان نمایش داده شود.
+                        </div>
                     </div>
                 </div>
 
                 <div
-                    class="faq-item bg-cardBg border border-darkBorder rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/50">
+                    class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#00f2fe]/50 backdrop-blur-sm">
                     <button
-                        class="w-full px-6 py-5 text-right font-bold text-lg text-gray-200 flex justify-between items-center focus:outline-none"
+                        class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
                         onclick="toggleFaq(this)">
-                        آیا استفاده از این ابزار واقعا رایگان است؟
-                        <i class="fa-solid fa-chevron-down text-gray-500"></i>
+                        <span>آیا استفاده از این ابزار واقعا رایگان است؟</span>
+                        <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                     </button>
-                    <div class="faq-answer px-6 pb-5 text-gray-400 leading-relaxed border-t border-darkBorder pt-4">
-                        بله! ما با پیاده‌سازی سیستم مدیریت هوشمند کاری کرده‌ایم که بدون نیاز به تنظیمات پیچیده، به صورت
-                        رایگان از ترجمه هوشمند استفاده کنید.
+                    <div
+                        class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                        <div class="pt-4 pb-5">
+                            بله! ما با پیاده‌سازی سیستم مدیریت هوشمند کاری کرده‌ایم که بدون نیاز به تنظیمات پیچیده، به
+                            صورت رایگان از ترجمه هوشمند استفاده کنید.
+                        </div>
                     </div>
                 </div>
 
                 <div
-                    class="faq-item bg-cardBg border border-darkBorder rounded-xl overflow-hidden transition-all duration-300 hover:border-primary/50">
+                    class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#00f2fe]/50 backdrop-blur-sm">
                     <button
-                        class="w-full px-6 py-5 text-right font-bold text-lg text-gray-200 flex justify-between items-center focus:outline-none"
+                        class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
                         onclick="toggleFaq(this)">
-                        آیا می‌توانم ظاهر و رنگ زیرنویس‌ها را تغییر دهم؟
-                        <i class="fa-solid fa-chevron-down text-gray-500"></i>
+                        <span>آیا می‌توانم ظاهر و رنگ زیرنویس‌ها را تغییر دهم؟</span>
+                        <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                     </button>
-                    <div class="faq-answer px-6 pb-5 text-gray-400 leading-relaxed border-t border-darkBorder pt-4">
-                        دقیقاً. در تنظیمات افزونه شما می‌توانید اندازه متن، فونت، رنگ متن اصلی و رنگ زیرنویس فارسی را
-                        مطابق سلیقه خود کاملاً شخصی‌سازی کنید.
+                    <div
+                        class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                        <div class="pt-4 pb-5">
+                            دقیقاً. در تنظیمات افزونه شما می‌توانید اندازه متن، فونت، رنگ متن اصلی و رنگ زیرنویس فارسی
+                            را مطابق سلیقه خود کاملاً شخصی‌سازی کنید.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -333,25 +390,26 @@
     </section>
 
     <!-- About Developer -->
-    <section id="about" class="py-16 bg-[#161616] border-t border-darkBorder">
-        <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
+    <section id="about" class="relative z-10 py-12 sm:py-16 bg-[#0b0f17]/60 border-t border-white/10 backdrop-blur-md">
+        <div
+            class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center md:items-start text-center md:text-right gap-6 sm:gap-8">
             <div
-                class="w-24 h-24 bg-cardBg border border-primary/50 rounded-full flex items-center justify-center text-4xl text-primary shrink-0 shadow-neon">
+                class="w-20 h-20 sm:w-24 sm:h-24 bg-[#0f172a] border border-[#00f2fe]/40 rounded-full flex items-center justify-center text-3xl sm:text-4xl text-[#00f2fe] shrink-0 shadow-[0_0_20px_rgba(0,242,254,0.3)]">
                 <i class="fa-solid fa-code"></i>
             </div>
-            <div>
-                <h3 class="text-2xl font-bold mb-3 text-white">درباره توسعه‌دهنده</h3>
-                <p class="text-gray-400 leading-relaxed">
+            <div class="flex-1">
+                <h3 class="text-xl sm:text-2xl font-bold mb-3 text-white">درباره توسعه‌دهنده</h3>
+                <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
                     به عنوان یک برنامه‌نویس، همیشه برای تماشای ویدیوهای آموزشی با چالش زبان مواجه بودم. تصمیم گرفتم
                     ابزاری بسازم که نه تنها ترجمه سریع و دقیقی ارائه دهد، بلکه محدودیت‌ها را دور بزند تا همه بتوانند
                     بدون مرز یاد بگیرند. این افزونه نتیجه این دغدغه شخصی است.
                 </p>
                 <!-- دکمه اتصال به اکانت X در بخش توسعه دهنده -->
-                <div class="mt-4">
+                <div class="mt-4 flex justify-center md:justify-start">
                     <a href="https://x.com/KavehKashefi0" target="_blank" rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 text-primary hover:text-white border border-primary/30 hover:border-primary px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm hover:shadow-neon">
-                        <i class="fa-brands fa-x-twitter"></i>
-                        ارتباط با من در X (توییتر)
+                        class="w-full sm:w-auto inline-flex justify-center items-center gap-2 text-[#00f2fe] hover:text-white border border-[#00f2fe]/40 hover:border-[#00f2fe] px-4 py-2.5 rounded-xl text-sm font-bold transition shadow-sm hover:shadow-[0_0_15px_rgba(0,242,254,0.4)] active:scale-95 bg-[#00f2fe]/5">
+                        <i class="fa-brands fa-x-twitter text-base"></i>
+                        <span>ارتباط با من در X (توییتر)</span>
                     </a>
                 </div>
             </div>
@@ -359,32 +417,60 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-darkBg text-gray-500 py-8 text-center text-sm border-t border-darkBorder">
-        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>© 2026 کلیه حقوق برای افزونه مترجم هوشمند یوتیوب محفوظ است.</p>
-            <div class="flex items-center gap-6">
-                <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
-                    target="_blank" rel="nofollow" class="hover:text-primary transition font-bold">نصب مستقیم از استور
-                    کروم</a>
-            </div>
-        </div>
-    </footer>
+    {% include footer.html %}
 
-    <!-- Simple JS for FAQ Accordion -->
+    <!-- Interactive Scripts -->
     <script>
-        function toggleFaq(button) {
-            const item = button.parentElement;
-            document.querySelectorAll('.faq-item').forEach(faq => {
-                if (faq !== item) {
-                    faq.classList.remove('faq-active');
-                    faq.querySelector('.fa-chevron-down').style.color = '#6b7280';
+        // Mobile Navigation Drawer Toggle Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuIcon = document.getElementById('mobile-menu-icon');
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+        function toggleMobileMenu() {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            if (isOpen) {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenuIcon.classList.remove('fa-xmark');
+                mobileMenuIcon.classList.add('fa-bars');
+            } else {
+                mobileMenu.classList.remove('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'true');
+                mobileMenuIcon.classList.remove('fa-bars');
+                mobileMenuIcon.classList.add('fa-xmark');
+            }
+        }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        }
+
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (!mobileMenu.classList.contains('hidden')) {
+                    toggleMobileMenu();
                 }
             });
-            item.classList.toggle('faq-active');
-            if (item.classList.contains('faq-active')) {
-                button.querySelector('.fa-chevron-down').style.color = '#1ee1c8';
-            } else {
-                button.querySelector('.fa-chevron-down').style.color = '#6b7280';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                toggleMobileMenu();
+            }
+        });
+
+        // FAQ Accordion Logic
+        function toggleFaq(button) {
+            const item = button.parentElement;
+            const isAlreadyActive = item.classList.contains('faq-active');
+
+            document.querySelectorAll('.faq-item').forEach(faq => {
+                faq.classList.remove('faq-active');
+            });
+
+            if (!isAlreadyActive) {
+                item.classList.add('faq-active');
             }
         }
     </script>
