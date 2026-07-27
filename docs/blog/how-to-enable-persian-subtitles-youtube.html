@@ -70,32 +70,30 @@
     <!-- Header / Floating Glass Navbar -->
     {% include header.html %}
 
-    <!-- Main Content Container -->
-    <main class="relative z-10 max-w-4xl mx-auto px-4 pt-10 sm:pt-16 pb-16 sm:pb-24">
+    <!-- Main Content Container (Wrapped inside max-w-3xl for optimal Persian reading line-length) -->
+    <main class="relative z-10 max-w-3xl mx-auto px-4 pt-10 sm:pt-16 pb-16 sm:pb-24 text-right">
 
         <!-- Article Breadcrumbs -->
-        <nav class="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-6">
+        <nav class="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-6 text-right">
             <a href="/" class="hover:text-[#00f2fe] transition">صفحه اصلی</a>
             <i class="fa-solid fa-chevron-left text-[10px]"></i>
-            <a href="/blog/how-to-enable-persian-subtitles-youtube.html"
-                class="hover:text-[#00f2fe] transition">وبلاگ</a>
+            <a href="/blog/index.html" class="hover:text-[#00f2fe] transition">وبلاگ</a>
             <i class="fa-solid fa-chevron-left text-[10px]"></i>
             <span class="text-gray-300 truncate">چگونه زیرنویس یوتیوب را فارسی کنیم؟</span>
         </nav>
 
         <!-- Article Header Section -->
         <header class="mb-10 text-right border-b border-white/10 pb-8">
-            <div
-                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00f2fe]/10 border border-[#00f2fe]/30 text-[#00f2fe] text-xs font-bold mb-4">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00f2fe]/10 border border-[#00f2fe]/30 text-[#00f2fe] text-xs font-bold mb-4">
                 <i class="fa-solid fa-book-open"></i>
                 آموزش کاربردی
             </div>
 
-            <h1 class="text-2xl sm:text-4xl font-extrabold text-white leading-tight mb-4">
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-white leading-tight mb-4 text-right">
                 چگونه زیرنویس یوتیوب را فارسی کنیم؟ (راهنمای کامل ۲۰۲۶)
             </h1>
 
-            <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-gray-400 font-medium">
+            <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-gray-400 font-medium text-right">
                 <span class="flex items-center gap-1.5">
                     <i class="fa-regular fa-calendar text-[#00f2fe]"></i>
                     بروزرسانی: مرداد ۱۴۰۵ (۲۰۲۶)
@@ -108,7 +106,7 @@
                 <span>•</span>
                 <span class="flex items-center gap-1.5">
                     <i class="fa-regular fa-user text-[#00f2fe]"></i>
-                    نویسنده: کاوه کشفی
+                    نویسنده: کاوه کاشفی
                 </span>
             </div>
         </header>
@@ -122,11 +120,10 @@
         </div>
 
         <!-- Article Body Content -->
-        <article class="prose prose-invert max-w-none space-y-8 text-base sm:text-lg leading-relaxed">
+        <article class="text-right text-base sm:text-lg leading-[2.1] text-gray-300/90">
 
             <!-- Intro Paragraph -->
-            <p
-                class="text-gray-300 bg-[#0f172a]/60 p-5 sm:p-6 rounded-2xl border-r-4 border-r-[#00f2fe] border border-white/10 backdrop-blur-md">
+            <p class="text-base sm:text-lg leading-[2.1] text-gray-300/90 bg-[#0f172a]/60 p-5 sm:p-6 rounded-2xl border-r-4 border-r-[#00f2fe] border border-white/10 backdrop-blur-md mb-6 sm:mb-8 text-right">
                 یوتیوب بزرگ‌ترین اقیانوس محتوای ویدئویی و آموزشی جهان است. اما عدم تسلط کافی به زبان انگلیسی یا
                 ترجمه‌های نامفهوم خودکار (Auto-Translate) یوتیوب، اغلب مانع بهره‌مندی کامل فارسی‌زبانان از این گنجینه
                 دانش می‌شود. در این مقاله جامع، تمامی روش‌های فعال‌سازی <strong>زیرنویس فارسی یوتیوب</strong> را بررسی
@@ -134,46 +131,39 @@
             </p>
 
             <!-- H2: Native YouTube Method -->
-            <section class="space-y-4">
-                <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
-                    <span
-                        class="w-8 h-8 rounded-lg bg-[#00f2fe]/10 border border-[#00f2fe]/30 flex items-center justify-center text-[#00f2fe] text-sm">۱</span>
-                    روش اول: فعال‌سازی زیرنویس خودکار داخل خود یوتیوب
+            <section class="text-right">
+                <h2 class="mt-12 mb-6 text-xl sm:text-2xl font-bold text-white border-r-4 border-[#00f2fe] pr-4 flex items-center gap-3 text-right">
+                    <span class="w-8 h-8 rounded-lg bg-[#00f2fe]/10 border border-[#00f2fe]/30 flex items-center justify-center text-[#00f2fe] text-sm shrink-0">۱</span>
+                    <span>روش اول: فعال‌سازی زیرنویس خودکار داخل خود یوتیوب</span>
                 </h2>
-                <p>
+                <p class="text-base sm:text-lg leading-[2.1] text-gray-300/90 mb-6 sm:mb-8 text-right">
                     یوتیوب به طور داخلی قابلیت ترجمه خودکار زیرنویس‌ها را دارد. برای استفاده از این قابلیت روی مرورگر
                     رایانه یا موبایل:
                 </p>
-                <ol class="list-decimal list-inside space-y-2 text-gray-300 pr-2">
-                    <li>وارد ویدیوی مورد نظر در یوتیوب شوید.</li>
-                    <li>روی آیکون <strong>Subtitles/CC</strong> (پایین سمت راست ویدیو) کلیک کنید تا زیرنویس اصلی فعال
-                        شود.</li>
-                    <li>روی آیکون <strong>تنظیمات (چرخ‌دنده ⚙️)</strong> کلیک کرده و گزینه <strong>Subtitles/CC</strong>
-                        را انتخاب کنید.</li>
-                    <li>گزینه <strong>Auto-translate (ترجمه خودکار)</strong> را بزنید و از لیست زبان‌ها، <strong>Persian
-                            (فارسی)</strong> را انتخاب نمایید.</li>
+                <ol class="list-decimal list-inside space-y-4 my-6 text-right pr-6 sm:pr-8 text-base sm:text-lg leading-[2.1] text-gray-300/90">
+                    <li class="leading-[2.1]">وارد ویدیوی مورد نظر در یوتیوب شوید.</li>
+                    <li class="leading-[2.1]">روی آیکون <strong>Subtitles/CC</strong> (پایین سمت راست ویدیو) کلیک کنید تا زیرنویس اصلی فعال شود.</li>
+                    <li class="leading-[2.1]">روی آیکون <strong>تنظیمات (چرخ‌دنده ⚙️)</strong> کلیک کرده و گزینه <strong>Subtitles/CC</strong> را انتخاب کنید.</li>
+                    <li class="leading-[2.1]">گزینه <strong>Auto-translate (ترجمه خودکار)</strong> را بزنید و از لیست زبان‌ها، <strong>Persian (فارسی)</strong> را انتخاب نمایید.</li>
                 </ol>
 
-                <!-- Warning Callout Box -->
-                <div
-                    class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 sm:p-5 text-amber-200 text-sm sm:text-base flex items-start gap-3">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-0.5 shrink-0"></i>
-                    <div>
-                        <strong>محدودیت‌های این روش:</strong> ترجمه خودکار یوتیوب اغلب کلمه به کلمه است، اصطلاحات
-                        عامیانه و تخصصی را اشتباه ترجمه می‌کند و امکان نمایش همزمان متن انگلیسی (زیرنویس دوزبانه) را
-                        ندارد.
+                <!-- Limitation Warning Box (Task 2 Requirement 5) -->
+                <div class="p-5 sm:p-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 my-8 shadow-lg text-right flex items-start gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-lg mt-1 shrink-0"></i>
+                    <div class="leading-[2.1] text-sm sm:text-base">
+                        <strong class="font-bold text-amber-300 block mb-1">محدودیت‌های این روش:</strong>
+                        ترجمه خودکار یوتیوب اغلب کلمه به کلمه است، اصطلاحات عامیانه و تخصصی را اشتباه ترجمه می‌کند و امکان نمایش همزمان متن انگلیسی (زیرنویس دوزبانه) را ندارد.
                     </div>
                 </div>
             </section>
 
             <!-- H2: AI Dual Subtitle Method -->
-            <section class="space-y-4 pt-6 border-t border-white/10">
-                <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
-                    <span
-                        class="w-8 h-8 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-center text-[#10b981] text-sm">۲</span>
-                    روش دوم: استفاده از افزونه هوشمند DualSub (ترجمه با هوش مصنوعی + دوزبانه)
+            <section class="pt-6 border-t border-white/10 text-right">
+                <h2 class="mt-12 mb-6 text-xl sm:text-2xl font-bold text-white border-r-4 border-[#00f2fe] pr-4 flex items-center gap-3 text-right">
+                    <span class="w-8 h-8 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-center text-[#10b981] text-sm shrink-0">۲</span>
+                    <span>روش دوم: استفاده از افزونه هوشمند DualSub (ترجمه با هوش مصنوعی + دوزبانه)</span>
                 </h2>
-                <p>
+                <p class="text-base sm:text-lg leading-[2.1] text-gray-300/90 mb-6 sm:mb-8 text-right">
                     برای حل مشکلات ترجمه ماشینی ساده و تقویت یادگیری زبان انگلیسی، استفاده از افزونه تخصصی
                     <strong>DualSub</strong> بهترین راه‌حل است. این افزونه با بهره‌گیری از مدل‌های پیشرفته هوش مصنوعی
                     (مانند ChatGPT و DeepSeek)، جملات را به زبان فارسی روان و اصطلاحی ترجمه کرده و همزمان متن اصلی را
@@ -181,7 +171,7 @@
                 </p>
 
                 <!-- Features Highlight List -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-8 text-right">
                     <div class="bg-[#0f172a]/70 p-4 rounded-xl border border-white/10 flex items-center gap-3">
                         <i class="fa-solid fa-bolt text-[#00f2fe] text-xl shrink-0"></i>
                         <div>
@@ -190,7 +180,7 @@
                         </div>
                     </div>
                     <div class="bg-[#0f172a]/70 p-4 rounded-xl border border-white/10 flex items-center gap-3">
-                        <i class="fa-solid fa-[#00f2fe] fa-language text-[#10b981] text-xl shrink-0"></i>
+                        <i class="fa-solid fa-language text-[#10b981] text-xl shrink-0"></i>
                         <div>
                             <h3 class="font-bold text-white text-sm">نمایش همزمان دوزبانه</h3>
                             <p class="text-xs text-gray-400">نمایش متن انگلیسی و فارسی باهم برای تقویت زبان</p>
@@ -213,38 +203,28 @@
                 </div>
 
                 <!-- Step by step guide -->
-                <h3 class="text-lg font-bold text-white pt-2">مراحل نصب و استفاده:</h3>
-                <div class="space-y-3 font-medium">
-                    <div class="bg-[#090D16] p-4 rounded-xl border border-white/10 flex items-center gap-4">
-                        <span
-                            class="w-8 h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm shrink-0">۱</span>
-                        <span>به <a
-                                href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
-                                target="_blank" rel="nofollow" class="text-[#00f2fe] underline">صفحه افزونه DualSub در
-                                کروم استور</a> بروید و دکمه <strong>Add to Chrome</strong> را بزنید.</span>
-                    </div>
-                    <div class="bg-[#090D16] p-4 rounded-xl border border-white/10 flex items-center gap-4">
-                        <span
-                            class="w-8 h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm shrink-0">۲</span>
-                        <span>هر ویدیو در یوتیوب را باز کنید؛ افزونه خودکار فعال شده و زیرنویس دوزبانه فارسی روی ویدیو
-                            قرار می‌گیرد.</span>
-                    </div>
-                    <div class="bg-[#090D16] p-4 rounded-xl border border-white/10 flex items-center gap-4">
-                        <span
-                            class="w-8 h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm shrink-0">۳</span>
-                        <span>با کلیک روی آیکون افزونه در بالای مرورگر، می‌توانید فونت، سایز و نحوه نمایش زیرنویس‌ها را
-                            تغییر دهید.</span>
-                    </div>
-                </div>
+                <h3 class="mt-8 mb-4 text-lg sm:text-xl font-bold text-white flex items-center gap-2 text-right">
+                    <i class="fa-solid fa-list-check text-[#00f2fe]"></i>
+                    <span>مراحل نصب و استفاده:</span>
+                </h3>
+                <ol class="list-decimal list-inside space-y-4 my-6 text-right pr-6 sm:pr-8 text-base sm:text-lg leading-[2.1] text-gray-300/90">
+                    <li class="leading-[2.1]">
+                        به <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
+                            target="_blank" rel="nofollow" class="text-[#00f2fe] underline hover:text-white transition font-bold">صفحه افزونه DualSub در کروم استور</a> بروید و دکمه <strong>Add to Chrome</strong> را بزنید.
+                    </li>
+                    <li class="leading-[2.1]">
+                        هر ویدیو در یوتیوب را باز کنید؛ افزونه خودکار فعال شده و زیرنویس دوزبانه فارسی روی ویدیو قرار می‌گیرد.
+                    </li>
+                    <li class="leading-[2.1]">
+                        با کلیک روی آیکون افزونه در بالای مرورگر، می‌توانید فونت، سایز و نحوه نمایش زیرنویس‌ها را تغییر دهید.
+                    </li>
+                </ol>
             </section>
 
             <!-- Mid CTA Banner -->
-            <div
-                class="my-10 bg-gradient-to-r from-[#00f2fe]/10 via-[#6157ff]/10 to-[#10b981]/10 border border-[#00f2fe]/30 rounded-2xl p-6 sm:p-8 text-center backdrop-blur-xl">
-                <h3 class="text-xl sm:text-2xl font-extrabold text-white mb-3">آماده‌اید یوتیوب را بدون محدودیت زبان
-                    ببینید؟</h3>
-                <p class="text-sm sm:text-base text-gray-300 mb-6">افزونه DualSub را رایگان نصب کنید و همین حالا ویدیوها
-                    را با زیرنویس دوزبانه هوشمند تماشا کنید.</p>
+            <div class="my-10 sm:my-12 bg-gradient-to-r from-[#00f2fe]/10 via-[#6157ff]/10 to-[#10b981]/10 border border-[#00f2fe]/30 rounded-2xl p-6 sm:p-8 text-center backdrop-blur-xl">
+                <h3 class="text-xl sm:text-2xl font-extrabold text-white mb-3">آماده‌اید یوتیوب را بدون محدودیت زبان ببینید؟</h3>
+                <p class="text-sm sm:text-base text-gray-300 mb-6 leading-relaxed">افزونه DualSub را رایگان نصب کنید و همین حالا ویدیوها را با زیرنویس دوزبانه هوشمند تماشا کنید.</p>
                 <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
                     target="_blank" rel="nofollow"
                     class="inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#00f2fe] to-[#6157ff] text-white px-7 py-3.5 rounded-xl font-bold text-sm sm:text-base shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.7)] transition transform hover:scale-105 active:scale-95 border border-white/20">
@@ -254,38 +234,35 @@
             </div>
 
             <!-- H2: FAQ Section -->
-            <section class="space-y-4 pt-6 border-t border-white/10">
-                <h2 class="text-xl sm:text-2xl font-bold text-white">سوالات متداول درباره زیرنویس فارسی یوتیوب</h2>
+            <section class="pt-6 border-t border-white/10 text-right">
+                <h2 class="mt-12 mb-6 text-xl sm:text-2xl font-bold text-white border-r-4 border-[#00f2fe] pr-4 flex items-center gap-3 text-right">
+                    <i class="fa-solid fa-circle-question text-[#00f2fe]"></i>
+                    <span>سوالات متداول درباره زیرنویس فارسی یوتیوب</span>
+                </h2>
 
-                <div class="space-y-3">
-                    <div
-                        class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300">
-                        <button
-                            class="w-full px-5 py-4 text-right font-bold text-gray-200 flex justify-between items-center gap-4"
+                <div class="space-y-4 my-6 text-right">
+                    <div class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300">
+                        <button class="w-full px-5 py-4 text-right font-bold text-gray-200 flex justify-between items-center gap-4 focus:outline-none"
                             onclick="toggleFaq(this)">
-                            <span>آیا روی همه ویدیوهای یوتیوب کار می‌کند؟</span>
+                            <span class="text-base sm:text-lg">آیا روی همه ویدیوهای یوتیوب کار می‌کند؟</span>
                             <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                         </button>
-                        <div class="faq-answer px-5 text-sm text-gray-400 border-t border-white/10">
-                            <div class="py-4">
-                                بله، روی هر ویدیویی که زیرنویس اصلی (انگلیسی، فرانسوی، آلمانی و...) یا زیرنویس اتوماتیک
-                                داشته باشد کاملا پشتیبانی می‌شود.
+                        <div class="faq-answer px-5 text-sm sm:text-base text-gray-300/90 border-t border-white/10 leading-[2.1]">
+                            <div class="py-4 text-right">
+                                بله، روی هر ویدیویی که زیرنویس اصلی (انگلیسی، فرانسوی، آلمانی و...) یا زیرنویس اتوماتیک داشته باشد کاملا پشتیبانی می‌شود.
                             </div>
                         </div>
                     </div>
 
-                    <div
-                        class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300">
-                        <button
-                            class="w-full px-5 py-4 text-right font-bold text-gray-200 flex justify-between items-center gap-4"
+                    <div class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300">
+                        <button class="w-full px-5 py-4 text-right font-bold text-gray-200 flex justify-between items-center gap-4 focus:outline-none"
                             onclick="toggleFaq(this)">
-                            <span>آیا امکان تغییر رنگ و فونت زیرنویس فارسی وجود دارد؟</span>
+                            <span class="text-base sm:text-lg">آیا امکان تغییر رنگ و فونت زیرنویس فارسی وجود دارد؟</span>
                             <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                         </button>
-                        <div class="faq-answer px-5 text-sm text-gray-400 border-t border-white/10">
-                            <div class="py-4">
-                                بله! در منوی تنظیمات افزونه می‌توانید رنگ متن فارسی، رنگ زیرنویس اصلی، سایز فونت و
-                                پس‌زمینه را دقیقاً مطابق سلیقه خود تنظیم کنید.
+                        <div class="faq-answer px-5 text-sm sm:text-base text-gray-300/90 border-t border-white/10 leading-[2.1]">
+                            <div class="py-4 text-right">
+                                بله! در منوی تنظیمات افزونه می‌توانید رنگ متن فارسی، رنگ زیرنویس اصلی، سایز فونت و پس‌زمینه را دقیقاً مطابق سلیقه خود تنظیم کنید.
                             </div>
                         </div>
                     </div>
@@ -296,11 +273,11 @@
 
         <!-- Back to blog / top -->
         <div class="mt-12 pt-6 border-t border-white/10 flex justify-between items-center text-sm text-gray-400">
-            <a href="/" class="hover:text-[#00f2fe] transition flex items-center gap-2">
+            <a href="/blog/index.html" class="hover:text-[#00f2fe] transition flex items-center gap-2 font-semibold">
                 <i class="fa-solid fa-arrow-right"></i>
-                بازگشت به صفحه اصلی
+                بازگشت به فهرست وبلاگ
             </a>
-            <a href="#" class="hover:text-[#00f2fe] transition flex items-center gap-2">
+            <a href="#" class="hover:text-[#00f2fe] transition flex items-center gap-2 font-semibold">
                 بالای صفحه
                 <i class="fa-solid fa-arrow-up"></i>
             </a>

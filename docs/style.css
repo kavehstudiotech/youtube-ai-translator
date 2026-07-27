@@ -703,4 +703,30 @@ h1, h2, h3, h4, h5, h6, p {
   .md\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
   .md\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
   .md\:text-6xl { font-size: 3.75rem; line-height: 1; }
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Article Typography, Padding & Callout Helpers */
+.leading-\[2\.1\] { line-height: 2.1; }
+.leading-loose { line-height: 2; }
+.pr-2 { padding-right: 0.5rem; }
+.pr-4 { padding-right: 1rem; }
+.pr-6 { padding-right: 1.5rem; }
+.pr-8 { padding-right: 2rem; }
+.my-6 { margin-top: 1.5rem; margin-bottom: 1.5rem; }
+.my-8 { margin-top: 2rem; margin-bottom: 2rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mt-8 { margin-top: 2rem; }
+.mt-10 { margin-top: 2.5rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.border-r-4 { border-right-width: 4px; }
+.bg-amber-500\/10 { background-color: rgba(245, 158, 11, 0.1); }
+.border-amber-500\/30 { border-color: rgba(245, 158, 11, 0.3); }
+.text-amber-200 { color: #fde68a; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.list-disc { list-style-type: disc; }
+.list-decimal { list-style-type: decimal; }
+.list-inside { list-style-position: inside; }
+.list-outside { list-style-position: outside; }
+

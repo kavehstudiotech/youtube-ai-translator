@@ -1,0 +1,384 @@
+---
+---
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="overflow-x-hidden">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+    <!-- SEO Meta Tags -->
+    <title>وبلاگ DualSub | آموزش‌های کاربردی ترجمه یوتیوب و هوش مصنوعی</title>
+    <meta name="description"
+        content="مجموعه مقالات و آموزش‌های تخصصی درباره ترجمه زیرنویس یوتیوب، یادگیری زبان انگلیسی با ویدیوهای دوزبانه و استفاده از هوش مصنوعی.">
+    <meta name="keywords"
+        content="وبلاگ DualSub, آموزش زیرنویس یوتیوب, یادگیری زبان با یوتیوب, زیرنویس دوزبانه, هوش مصنوعی ترجمه">
+    <link rel="canonical" href="https://dualsub.ir/blog/">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon.png">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
+
+    <!-- Local Font Stylesheet -->
+    <link rel="stylesheet" href="/fonts/vazirmatn.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="/style.css">
+
+    <!-- Schema Markup for Blog -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "وبلاگ DualSub",
+      "description": "آموزش‌های کاربردی یادگیری زبان، هوش مصنوعی و زیرنویس یوتیوب",
+      "url": "https://dualsub.ir/blog/",
+      "publisher": {
+        "@type": "Organization",
+        "name": "DualSub Iran",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://dualsub.ir/icon.png"
+        }
+      }
+    }
+    </script>
+</head>
+
+<body class="font-sans antialiased selection:bg-[#00f2fe] selection:text-black overflow-x-hidden text-gray-200">
+
+    <!-- Background Ambient Glow & Vercel Grid -->
+    <div class="fixed inset-0 bg-grid-pattern pointer-events-none z-0"></div>
+    <div class="ambient-blob-cyan"></div>
+    <div class="ambient-blob-purple"></div>
+
+    <!-- Header / Floating Glass Navbar -->
+    {% include header.html %}
+
+    <!-- Main Content Container -->
+    <main class="relative z-10 max-w-6xl mx-auto px-4 pt-10 sm:pt-16 pb-16 sm:pb-24">
+
+        <!-- Breadcrumbs -->
+        <nav class="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mb-8 text-right">
+            <a href="/" class="hover:text-[#00f2fe] transition">صفحه اصلی</a>
+            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+            <span class="text-gray-200 font-bold">وبلاگ</span>
+        </nav>
+
+        <!-- Hero Header -->
+        <div class="text-center mb-12 sm:mb-16">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#00f2fe]/10 border border-[#00f2fe]/30 text-[#00f2fe] text-xs sm:text-sm font-bold mb-4">
+                <i class="fa-solid fa-graduation-cap"></i>
+                مرکز آموزش و مقالات
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight mb-4">
+                وبلاگ <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#10b981]">DualSub</span>
+            </h1>
+            <p class="text-base sm:text-xl text-gray-300/90 max-w-2xl mx-auto font-normal">
+                آموزش‌های کاربردی یادگیری زبان، هوش مصنوعی و زیرنویس یوتیوب
+            </p>
+        </div>
+
+        <!-- Featured Article Hero Card -->
+        <section class="mb-14 sm:mb-16">
+            <div class="bg-[#0f172a]/60 border border-[#00f2fe]/30 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-[0_0_35px_rgba(0,242,254,0.1)] hover:border-[#00f2fe]/60 transition duration-300 relative overflow-hidden group">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    
+                    <!-- Thumbnail -->
+                    <div class="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl aspect-video">
+                        <img src="/hero-demo.png" alt="چگونه زیرنویس یوتیوب را فارسی کنیم؟" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
+                        <div class="absolute top-3 right-3 bg-[#00f2fe] text-[#090D16] px-3 py-1 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5">
+                            <i class="fa-solid fa-star"></i>
+                            مقاله ویژه
+                        </div>
+                    </div>
+
+                    <!-- Details -->
+                    <div class="text-right flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-3 text-xs text-gray-400 mb-3 font-medium">
+                                <span class="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[#00f2fe] font-bold">آموزش کاربردی</span>
+                                <span>•</span>
+                                <span><i class="fa-regular fa-calendar text-[#00f2fe] ml-1"></i> مرداد ۱۴۰۵</span>
+                                <span>•</span>
+                                <span><i class="fa-regular fa-clock text-[#00f2fe] ml-1"></i> ۴ دقیقه مطالعه</span>
+                            </div>
+                            
+                            <h2 class="text-xl sm:text-3xl font-extrabold text-white leading-snug mb-4 group-hover:text-[#00f2fe] transition">
+                                <a href="/blog/how-to-enable-persian-subtitles-youtube.html">
+                                    چگونه زیرنویس یوتیوب را فارسی کنیم؟ (راهنمای کامل ۲۰۲۶)
+                                </a>
+                            </h2>
+                            
+                            <p class="text-sm sm:text-base text-gray-300/90 leading-relaxed mb-6">
+                                آموزش قدم‌به‌قدم فعال‌سازی زیرنویس فارسی یوتیوب در کامپیوتر و گوشی با استفاده از هوش مصنوعی و افزونه DualSub. راه‌حل بی‌دردسر و هوشمند تماشای ویدیوهای دوزبانه.
+                            </p>
+                        </div>
+
+                        <div>
+                            <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00f2fe] to-[#6157ff] text-white px-6 py-3 rounded-xl font-bold text-sm shadow-[0_0_15px_rgba(0,242,254,0.3)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] transition transform hover:scale-105 active:scale-95 border border-white/20">
+                                <span>مطالعه مقاله</span>
+                                <i class="fa-solid fa-arrow-left text-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Article Grid Section -->
+        <section class="space-y-8">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
+                    <span class="w-3 h-3 rounded-full bg-[#00f2fe] animate-pulse"></span>
+                    آخرین مقالات و آموزش‌ها
+                </h2>
+                <span class="text-xs sm:text-sm text-gray-400">۶ مقاله منتشر شده</span>
+            </div>
+
+            <!-- 3-Column Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Card 1 -->
+                <article class="bg-[#0f172a]/50 border border-white/10 rounded-2xl overflow-hidden hover:border-[#00f2fe]/50 transition duration-300 flex flex-col justify-between group backdrop-blur-sm shadow-lg">
+                    <div>
+                        <div class="relative overflow-hidden aspect-video">
+                            <img src="/hero-demo.png" alt="چگونه زیرنویس یوتیوب را فارسی کنیم؟" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <span class="absolute top-3 right-3 bg-[#0b0f17]/80 backdrop-blur-md text-[#00f2fe] border border-[#00f2fe]/30 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                آموزش کاربردی
+                            </span>
+                        </div>
+                        <div class="p-5 text-right space-y-3">
+                            <div class="flex items-center justify-between text-xs text-gray-400 font-medium">
+                                <span><i class="fa-regular fa-calendar text-[#00f2fe] ml-1"></i> مرداد ۱۴۰۵</span>
+                                <span><i class="fa-regular fa-clock text-[#00f2fe] ml-1"></i> ۴ دقیقه</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-[#00f2fe] transition leading-snug line-clamp-2">
+                                <a href="/blog/how-to-enable-persian-subtitles-youtube.html">
+                                    چگونه زیرنویس یوتیوب را فارسی کنیم؟ (راهنمای کامل ۲۰۲۶)
+                                </a>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed line-clamp-3">
+                                روش‌های فعال‌سازی زیرنویس فارسی در یوتیوب و نحوه استفاده از هوش مصنوعی برای ترجمه روان و دوزبانه.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 text-right">
+                        <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#00f2fe] hover:underline">
+                            <span>مطالعه مقاله</span>
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Card 2 -->
+                <article class="bg-[#0f172a]/50 border border-white/10 rounded-2xl overflow-hidden hover:border-[#00f2fe]/50 transition duration-300 flex flex-col justify-between group backdrop-blur-sm shadow-lg">
+                    <div>
+                        <div class="relative overflow-hidden aspect-video bg-[#090D16] flex items-center justify-center p-6 border-b border-white/10">
+                            <i class="fa-solid fa-language text-5xl text-[#00f2fe]/40 group-hover:text-[#00f2fe]/80 transition"></i>
+                            <span class="absolute top-3 right-3 bg-[#0b0f17]/80 backdrop-blur-md text-[#10b981] border border-[#10b981]/30 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                یادگیری زبان
+                            </span>
+                        </div>
+                        <div class="p-5 text-right space-y-3">
+                            <div class="flex items-center justify-between text-xs text-gray-400 font-medium">
+                                <span><i class="fa-regular fa-calendar text-[#00f2fe] ml-1"></i> مرداد ۱۴۰۵</span>
+                                <span><i class="fa-regular fa-clock text-[#00f2fe] ml-1"></i> ۵ دقیقه</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-[#00f2fe] transition leading-snug line-clamp-2">
+                                <a href="/blog/how-to-enable-persian-subtitles-youtube.html">
+                                    بهترین روش‌های یادگیری زبان انگلیسی با ویدیوهای یوتیوب
+                                </a>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed line-clamp-3">
+                                راهنمای کاربردی برای افزایش گنجینه لغات و بهبود درک شنیداری (Listening) با استفاده از زیرنویس دوزبانه.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 text-right">
+                        <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#00f2fe] hover:underline">
+                            <span>مطالعه مقاله</span>
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Card 3 -->
+                <article class="bg-[#0f172a]/50 border border-white/10 rounded-2xl overflow-hidden hover:border-[#00f2fe]/50 transition duration-300 flex flex-col justify-between group backdrop-blur-sm shadow-lg">
+                    <div>
+                        <div class="relative overflow-hidden aspect-video bg-[#090D16] flex items-center justify-center p-6 border-b border-white/10">
+                            <i class="fa-solid fa-brain text-5xl text-purple-400/40 group-hover:text-purple-400/80 transition"></i>
+                            <span class="absolute top-3 right-3 bg-[#0b0f17]/80 backdrop-blur-md text-purple-400 border border-purple-400/30 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                هوش مصنوعی
+                            </span>
+                        </div>
+                        <div class="p-5 text-right space-y-3">
+                            <div class="flex items-center justify-between text-xs text-gray-400 font-medium">
+                                <span><i class="fa-regular fa-calendar text-[#00f2fe] ml-1"></i> مرداد ۱۴۰۵</span>
+                                <span><i class="fa-regular fa-clock text-[#00f2fe] ml-1"></i> ۶ دقیقه</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-[#00f2fe] transition leading-snug line-clamp-2">
+                                <a href="/blog/how-to-enable-persian-subtitles-youtube.html">
+                                    مقایسه هوش مصنوعی ChatGPT و DeepSeek در ترجمه زیرنویس
+                                </a>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed line-clamp-3">
+                                بررسی دقیق عملکرد مدل‌های مختلف هوش مصنوعی در ترجمه اصطلاحات عامیانه و ساختار جملات انگلیسی.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 text-right">
+                        <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#00f2fe] hover:underline">
+                            <span>مطالعه مقاله</span>
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Card 4 -->
+                <article class="bg-[#0f172a]/50 border border-white/10 rounded-2xl overflow-hidden hover:border-[#00f2fe]/50 transition duration-300 flex flex-col justify-between group backdrop-blur-sm shadow-lg">
+                    <div>
+                        <div class="relative overflow-hidden aspect-video bg-[#090D16] flex items-center justify-center p-6 border-b border-white/10">
+                            <i class="fa-solid fa-[#00f2fe] fa-wrench text-5xl text-amber-400/40 group-hover:text-amber-400/80 transition"></i>
+                            <span class="absolute top-3 right-3 bg-[#0b0f17]/80 backdrop-blur-md text-amber-400 border border-amber-400/30 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                عیب‌یابی
+                            </span>
+                        </div>
+                        <div class="p-5 text-right space-y-3">
+                            <div class="flex items-center justify-between text-xs text-gray-400 font-medium">
+                                <span><i class="fa-regular fa-calendar text-[#00f2fe] ml-1"></i> مرداد ۱۴۰۵</span>
+                                <span><i class="fa-regular fa-clock text-[#00f2fe] ml-1"></i> ۴ دقیقه</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-[#00f2fe] transition leading-snug line-clamp-2">
+                                <a href="/blog/how-to-enable-persian-subtitles-youtube.html">
+                                    حل مشکل عدم نمایش زیرنویس در یوتیوب موبایل و مرورگر
+                                </a>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed line-clamp-3">
+                                بررسی علل روشن نشدن زیرنویس (CC) در یوتیوب و ارائه راه‌حل‌های سریع برای رفع مشکل بارگذاری.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 text-right">
+                        <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#00f2fe] hover:underline">
+                            <span>مطالعه مقاله</span>
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Card 5 -->
+                <article class="bg-[#0f172a]/50 border border-white/10 rounded-2xl overflow-hidden hover:border-[#00f2fe]/50 transition duration-300 flex flex-col justify-between group backdrop-blur-sm shadow-lg">
+                    <div>
+                        <div class="relative overflow-hidden aspect-video bg-[#090D16] flex items-center justify-center p-6 border-b border-white/10">
+                            <i class="fa-solid fa-[#00f2fe] fa-[#00f2fe] fa-comments text-5xl text-emerald-400/40 group-hover:text-emerald-400/80 transition"></i>
+                            <span class="absolute top-3 right-3 bg-[#0b0f17]/80 backdrop-blur-md text-emerald-400 border border-emerald-400/30 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                تکنیک زبان
+                            </span>
+                        </div>
+                        <div class="p-5 text-right space-y-3">
+                            <div class="flex items-center justify-between text-xs text-gray-400 font-medium">
+                                <span><i class="fa-regular fa-calendar text-[#00f2fe] ml-1"></i> مرداد ۱۴۰۵</span>
+                                <span><i class="fa-regular fa-clock text-[#00f2fe] ml-1"></i> ۷ دقیقه</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-[#00f2fe] transition leading-snug line-clamp-2">
+                                <a href="/blog/how-to-enable-persian-subtitles-youtube.html">
+                                    استفاده از زیرنویس دوزبانه برای یادگیری اصطلاحات عامیانه
+                                </a>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed line-clamp-3">
+                                چطور با تماشای فیلم‌ها و ویدیوهای یوتیوب با دو زیرنویس همزمان، اصطلاحات خیابانی را سریع‌تر یاد بگیریم؟
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 text-right">
+                        <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#00f2fe] hover:underline">
+                            <span>مطالعه مقاله</span>
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <!-- Card 6 -->
+                <article class="bg-[#0f172a]/50 border border-white/10 rounded-2xl overflow-hidden hover:border-[#00f2fe]/50 transition duration-300 flex flex-col justify-between group backdrop-blur-sm shadow-lg">
+                    <div>
+                        <div class="relative overflow-hidden aspect-video bg-[#090D16] flex items-center justify-center p-6 border-b border-white/10">
+                            <i class="fa-solid fa-[#00f2fe] fa-sliders text-5xl text-cyan-400/40 group-hover:text-cyan-400/80 transition"></i>
+                            <span class="absolute top-3 right-3 bg-[#0b0f17]/80 backdrop-blur-md text-[#00f2fe] border border-[#00f2fe]/30 px-2.5 py-1 rounded-lg text-xs font-bold">
+                                آموزش افزونه
+                            </span>
+                        </div>
+                        <div class="p-5 text-right space-y-3">
+                            <div class="flex items-center justify-between text-xs text-gray-400 font-medium">
+                                <span><i class="fa-regular fa-calendar text-[#00f2fe] ml-1"></i> مرداد ۱۴۰۵</span>
+                                <span><i class="fa-regular fa-clock text-[#00f2fe] ml-1"></i> ۳ دقیقه</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-[#00f2fe] transition leading-snug line-clamp-2">
+                                <a href="/blog/how-to-enable-persian-subtitles-youtube.html">
+                                    راهنمای شخصی‌سازی فونت، سایز و رنگ زیرنویس در DualSub
+                                </a>
+                            </h3>
+                            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed line-clamp-3">
+                                آموزش کامل تنظیمات ظاهری افزونه DualSub برای تجربه مطالعه راحت‌تر زیرنویس بر روی انواع نمایشگرها.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="p-5 pt-0 text-right">
+                        <a href="/blog/how-to-enable-persian-subtitles-youtube.html" class="inline-flex items-center gap-1.5 text-xs font-bold text-[#00f2fe] hover:underline">
+                            <span>مطالعه مقاله</span>
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                        </a>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    {% include footer.html %}
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Mobile Navigation Drawer Toggle Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuIcon = document.getElementById('mobile-menu-icon');
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+        function toggleMobileMenu() {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            if (isOpen) {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenuIcon.classList.remove('fa-xmark');
+                mobileMenuIcon.classList.add('fa-bars');
+            } else {
+                mobileMenu.classList.remove('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'true');
+                mobileMenuIcon.classList.remove('fa-bars');
+                mobileMenuIcon.classList.add('fa-xmark');
+            }
+        }
+
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        }
+
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                    toggleMobileMenu();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
