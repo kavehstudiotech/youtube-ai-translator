@@ -26,10 +26,103 @@
   opacity: 1;
 }
 
+#ytfa-bar .ytfa-fa,
+#ytfa-bar .ytfa-orig {
+  pointer-events: auto;
+}
+
 #ytfa-bar .ytfa-fa {
   direction: rtl;
   unicode-bidi: plaintext;
   white-space: pre-wrap;
+}
+
+/* Active Recall Mode (Subtle White Telegram Spoiler Effect) */
+#ytfa-bar .ytfa-fa.ytfa-active-recall {
+  position: relative;
+  color: transparent !important;
+  user-select: none;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 6px;
+  overflow: hidden;
+  transition: color 0.25s ease, background 0.25s ease;
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-block;
+}
+
+#ytfa-bar .ytfa-fa.ytfa-active-recall::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background-image: 
+    radial-gradient(circle, rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.25) 1px, transparent 1px);
+  background-size: 6px 6px, 10px 10px;
+  background-position: 0 0, 3px 3px;
+  animation: ytfaSpoilerSubtle 1.2s infinite linear;
+  opacity: 0.65;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.25s ease;
+}
+
+@keyframes ytfaSpoilerSubtle {
+  0% {
+    background-position: 0 0, 3px 3px;
+    opacity: 0.6;
+  }
+  33% {
+    background-position: 2px 4px, -2px 1px;
+    opacity: 0.75;
+  }
+  66% {
+    background-position: -3px 1px, 4px -2px;
+    opacity: 0.55;
+  }
+  100% {
+    background-position: 0 0, 3px 3px;
+    opacity: 0.6;
+  }
+}
+
+#ytfa-bar .ytfa-fa.ytfa-active-recall:hover,
+#ytfa-bar .ytfa-fa.ytfa-active-recall.ytfa-manual-reveal {
+  color: var(--ytfa-fa-color, #fff) !important;
+  background: transparent;
+}
+
+#ytfa-bar .ytfa-fa.ytfa-active-recall:hover::before,
+#ytfa-bar .ytfa-fa.ytfa-active-recall.ytfa-manual-reveal::before {
+  opacity: 0;
+}
+
+/* Interactive Clickable Words in Subtitle Overlay (Natural YouTube Typography) */
+#ytfa-bar .ytfa-orig .ytfa-word {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border-radius: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  user-select: text;
+}
+
+#ytfa-bar .ytfa-orig .ytfa-word:hover {
+  background: rgba(0, 245, 212, 0.25);
+  color: #00f5d4;
+  box-shadow: 0 0 0 2px rgba(0, 245, 212, 0.25);
+  text-shadow: 0 0 8px rgba(0, 245, 212, 0.5);
+}
+
+#ytfa-bar .ytfa-orig .ytfa-word.ytfa-word-saved,
+#ytfa-bar .ytfa-orig .ytfa-word:active {
+  background: rgba(255, 215, 0, 0.35);
+  color: #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
 }
 
 #ytfa-bar .ytfa-orig {

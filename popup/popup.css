@@ -687,6 +687,63 @@ output {
   direction: rtl;
 }
 
+#previewBar .ytfa-fa.ytfa-active-recall {
+  color: transparent !important;
+  text-shadow: none !important;
+  user-select: none;
+  cursor: pointer;
+  position: relative;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-block;
+  padding: 0 4px;
+}
+
+#previewBar .ytfa-fa.ytfa-active-recall::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background-image: 
+    radial-gradient(circle, rgba(255, 255, 255, 0.45) 1px, transparent 1px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.25) 1px, transparent 1px);
+  background-size: 6px 6px, 10px 10px;
+  background-position: 0 0, 3px 3px;
+  animation: ytfaSpoilerSubtle 1.2s infinite linear;
+  opacity: 0.65;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.25s ease;
+}
+
+#previewBar .ytfa-fa.ytfa-active-recall:hover {
+  color: #fff !important;
+  background: transparent;
+}
+
+#previewBar .ytfa-fa.ytfa-active-recall:hover::before {
+  opacity: 0;
+}
+
+@keyframes ytfaSpoilerSubtle {
+  0% {
+    background-position: 0 0, 3px 3px;
+    opacity: 0.6;
+  }
+  33% {
+    background-position: 2px 4px, -2px 1px;
+    opacity: 0.75;
+  }
+  66% {
+    background-position: -3px 1px, 4px -2px;
+    opacity: 0.55;
+  }
+  100% {
+    background-position: 0 0, 3px 3px;
+    opacity: 0.6;
+  }
+}
+
 #previewBar .ytfa-orig {
   direction: ltr;
   margin-top: 2px;
@@ -800,5 +857,365 @@ output {
   color: var(--muted);
   font-size: 11px;
   margin: 5px 0 10px;
+  line-height: 1.5;
+}
+
+/* ─── Tabs Navigation Bar ──────────────────────────────────── */
+.tabs-nav {
+  display: flex;
+  background: #111115;
+  border-bottom: 1px solid var(--line);
+  padding: 4px 10px 0;
+  gap: 6px;
+  position: sticky;
+  top: 55px;
+  z-index: 9;
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+  border-radius: 6px 6px 0 0;
+}
+
+.tab-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: var(--accent-muted);
+}
+
+.tab-btn .badge {
+  background: rgba(0, 245, 212, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(0, 245, 212, 0.3);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.tab-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tab-view[hidden] {
+  display: none !important;
+}
+
+/* ─── Saved Words Tab Layout ───────────────────────────────── */
+.saved-header-card {
+  padding: 10px 12px;
+}
+
+.saved-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrap svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.search-input-wrap input {
+  padding-right: 32px !important;
+}
+
+.btn-anki {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.15));
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  color: #ffd700;
+  border-radius: var(--radius-input);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.1);
+}
+
+.btn-anki:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 165, 0, 0.25));
+  border-color: #ffd700;
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-anki:active {
+  transform: scale(0.98);
+}
+
+.saved-words-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.saved-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.saved-card:hover {
+  border-color: rgba(0, 245, 212, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.saved-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.saved-word-badge {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.3px;
+  word-break: break-word;
+}
+
+.word-fa-field {
+  margin-top: 4px;
+}
+
+.word-fa-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.word-fa-label span {
+  flex: none;
+}
+
+.word-fa-input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.word-fa-input-wrap .input-word-fa {
+  width: 100%;
+  padding-left: 30px !important;
+}
+
+.btn-ai-translate {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 245, 212, 0.12);
+  border: 1px solid rgba(0, 245, 212, 0.25);
+  border-radius: 4px;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ai-translate:hover {
+  background: rgba(0, 245, 212, 0.25);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(0, 245, 212, 0.4);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.btn-ai-translate.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.word-fa-status {
+  font-size: 10px;
+  color: var(--ok);
+  flex: none;
+  min-width: 45px;
+  text-align: left;
+}
+
+.sentence-context-box {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.saved-en-context {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.saved-fa-context {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+mark.hl-word {
+  background: rgba(0, 245, 212, 0.25);
+  color: var(--accent);
+  padding: 0 3px;
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.btn-delete-saved {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color var(--transition), background var(--transition);
+  flex: none;
+}
+
+.btn-delete-saved:hover {
+  color: var(--err);
+  background: rgba(255, 107, 107, 0.12);
+}
+
+.saved-fa {
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.saved-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 10px;
+}
+
+.saved-url-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+  text-decoration: none;
+  max-width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition);
+}
+
+.saved-url-link:hover {
+  color: var(--accent);
+}
+
+.saved-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saved-timestamp {
+  color: #ffd700;
+  font-weight: 700;
+  flex: none;
+}
+
+.saved-date {
+  color: var(--muted);
+  flex: none;
+}
+
+/* ─── Empty State ─────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 30px 16px;
+  background: var(--card);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-card);
+  margin-top: 4px;
+}
+
+.empty-state .empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.empty-state h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
   line-height: 1.5;
 }

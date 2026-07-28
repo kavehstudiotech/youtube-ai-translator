@@ -73,6 +73,7 @@ const SETTINGS_DEFAULTS = {
   showOriginal: true,
   showPersian: true,
   origFirst: false,
+  activeRecall: false,
   faFontSize: 26,
   faColor: '#ffffff',
   faFontFamily: "'Vazirmatn', Tahoma, Arial, sans-serif",
@@ -133,14 +134,28 @@ async function loadSettings() {
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
   let touched = false;
+  let requiresRetranslation = false;
+
+  const TRANSLATION_KEYS = new Set([
+    'enabled', 'provider', 'apiKey', 'geminiApiKey', 'grokApiKey',
+    'deepseekApiKey', 'openaiApiKey', 'model', 'geminiModel', 'grokModel',
+    'deepseekModel', 'openaiModel', 'localBaseUrl', 'localModel',
+    'customBaseUrl', 'customApiKey', 'customModel', 'rpm'
+  ]);
+
   for (const key of Object.keys(changes)) {
     if (key in settings || key in SETTINGS_DEFAULTS) {
       settings[key] = changes[key].newValue;
       touched = true;
+      if (TRANSLATION_KEYS.has(key)) {
+        requiresRetranslation = true;
+      }
     }
   }
+
   if (touched) {
     applyStyles();
+
     if (!settings.enabled) {
       bootGeneration++;
       state.loading = false;
@@ -157,10 +172,15 @@ chrome.storage.onChanged.addListener((changes, area) => {
       if (bar) attachBar();
       ensureToggleBtn();
       updateToggleBtn();
-      if (!state.cues.length && !state.loading) {
-        boot();
-      } else if (state.cues.length) {
-        translateAll();
+
+      // Only trigger re-translation / boot if translation configuration changed
+      if (requiresRetranslation) {
+        if (!state.cues.length && !state.loading) {
+          boot();
+        } else if (state.cues.length) {
+          stopTranslation();
+          translateAll();
+        }
       }
     } else {
       cleanupPageUi();
@@ -171,6 +191,107 @@ chrome.storage.onChanged.addListener((changes, area) => {
 /* ------------------------- subtitle overlay UI ----------------------- */
 
 let bar, faEl, origEl;
+
+function renderClickableOriginalText(text) {
+  if (!origEl) return;
+  origEl.textContent = '';
+  if (!text) return;
+
+  const regex = /([\w\u0600-\u06FF']+)|([^\w\u0600-\u06FF']+)/g;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    const wordToken = match[1];
+    const nonWordToken = match[2];
+
+    if (wordToken) {
+      const span = document.createElement('span');
+      span.className = 'ytfa-word';
+      span.textContent = wordToken;
+      span.dataset.word = wordToken;
+      span.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onWordClick(span, wordToken);
+      });
+      origEl.appendChild(span);
+    } else if (nonWordToken) {
+      origEl.appendChild(document.createTextNode(nonWordToken));
+    }
+  }
+}
+
+async function onWordClick(spanEl, word) {
+  const cue = state.cues[state.currentIndex];
+  if (!cue) return;
+
+  spanEl.classList.add('ytfa-word-saved');
+  setTimeout(() => spanEl.classList.remove('ytfa-word-saved'), 800);
+
+  const vId = state.videoId || getVideoIdFromUrl() || 'video';
+  const video = getVideo();
+  const currentTimeSec = video ? Math.floor(video.currentTime) : 0;
+  const rawTitle =
+    document.querySelector('h1.ytd-watch-metadata, h1.ytd-video-primary-info-renderer')
+      ?.textContent?.trim() || document.title.replace('- YouTube', '').trim();
+  const url = `https://www.youtube.com/watch?v=${vId}&t=${currentTimeSec}s`;
+
+  const newItem = {
+    id: 'sw_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+    word: word,
+    wordFa: '',
+    en: cue.text || '',
+    fa: cue.fa || '',
+    title: rawTitle || 'ویدیو یوتیوب',
+    url: url,
+    videoId: vId,
+    timestamp: currentTimeSec,
+    dateAdded: new Date().toISOString(),
+  };
+
+  const data = await chrome.storage.local.get({ savedWords: [] });
+  let savedWords = data.savedWords || [];
+
+  const exists = savedWords.some(
+    (item) => (item.word || item.en) === word && item.en === cue.text && item.videoId === vId
+  );
+
+  if (!exists) {
+    savedWords.unshift(newItem);
+    await chrome.storage.local.set({ savedWords });
+    notify(`کلمه "${word}" به فلاش‌کارت‌ها اضافه شد ✓`);
+  } else {
+    notify(`کلمه "${word}" قبلاً ذخیره شده است.`);
+  }
+}
+
+function ensureBar() {
+  if (!isYouTubeVideoPage()) return null;
+  if (bar && document.body.contains(bar)) return bar;
+
+  bar = document.createElement('div');
+  bar.id = 'ytfa-bar';
+  bar.dir = 'rtl';
+
+  faEl = document.createElement('div');
+  faEl.className = 'ytfa-fa';
+  faEl.addEventListener('click', (e) => {
+    if (settings.activeRecall) {
+      e.stopPropagation();
+      faEl.classList.toggle('ytfa-manual-reveal');
+    }
+  });
+
+  origEl = document.createElement('div');
+  origEl.className = 'ytfa-orig';
+  origEl.dir = 'ltr';
+
+  bar.appendChild(faEl);
+  bar.appendChild(origEl);
+
+  attachBar();
+  applyStyles();
+  return bar;
+}
 
 function getActiveReelRenderer() {
   if (!window.location.pathname.startsWith('/shorts/')) return null;
@@ -509,6 +630,12 @@ function applyStyles() {
 
   faEl.style.display = s.showPersian ? 'block' : 'none';
 
+  if (s.activeRecall) {
+    faEl.classList.add('ytfa-active-recall');
+  } else {
+    faEl.classList.remove('ytfa-active-recall', 'ytfa-manual-reveal');
+  }
+
   if (s.origFirst) {
     if (bar.firstChild !== origEl) bar.insertBefore(origEl, faEl);
   } else {
@@ -520,8 +647,13 @@ function showCue(cue) {
   if (!isYouTubeVideoPage()) return;
   if (!ensureBar()) return;
   attachBar();
+
+  if (faEl.textContent !== (cue.fa || '…')) {
+    faEl.classList.remove('ytfa-manual-reveal');
+  }
+
   faEl.textContent = cue.fa || '…';
-  origEl.textContent = cue.text || '';
+  renderClickableOriginalText(cue.text || '');
   if (subtitleVisible) bar.classList.add('ytfa-visible');
 }
 
@@ -1054,7 +1186,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 });
 
 (async function init() {
-  loadFonts(); 
+  loadFonts();
   await loadSettings();
   syncLoop();
   if (isYouTubeVideoPage()) updateToggleBtn();

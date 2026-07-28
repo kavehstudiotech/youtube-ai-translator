@@ -50,6 +50,7 @@ const DEFAULTS = {
   showOriginal: true,
   showPersian: true,
   origFirst: false,
+  activeRecall: false,
   faFontSize: 26,
   faColor: '#ffffff',
   faFontFamily: "'Vazirmatn', Tahoma, Arial, sans-serif",
@@ -86,6 +87,7 @@ const FIELDS = {
   showOriginal: 'checked',
   showPersian: 'checked',
   origFirst: 'checked',
+  activeRecall: 'checked',
   faFontSize: 'int',
   faColor: 'value',
   faFontFamily: 'value',
@@ -270,12 +272,13 @@ function writeControl(id, kind, val) {
 }
 
 function hexToRgba(hex, alpha) {
+  if (!hex) return `rgba(0, 0, 0, ${alpha})`;
   const m = hex.replace('#', '');
-  const v = m.length === 3 ? m.split('').map((c) => c + c).join('') : m;
-  const r = parseInt(v.slice(0, 2), 16);
-  const g = parseInt(v.slice(2, 4), 16);
-  const b = parseInt(v.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
+  const v = m.length === 3 ? m.split('').map((c) => c + c).join('') : m.padEnd(6, '0').slice(0, 6);
+  const r = parseInt(v.slice(0, 2), 16) || 0;
+  const g = parseInt(v.slice(2, 4), 16) || 0;
+  const b = parseInt(v.slice(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function updateOutputs() {
@@ -296,6 +299,12 @@ function renderPreview() {
   fa.style.color = current.faColor;
   fa.style.fontFamily = current.faFontFamily;
   fa.style.fontWeight = current.faBold ? '700' : '400';
+
+  if (current.activeRecall) {
+    fa.classList.add('ytfa-active-recall');
+  } else {
+    fa.classList.remove('ytfa-active-recall');
+  }
 
   orig.style.fontSize = current.origFontSize + 'px';
   orig.style.color = current.origColor;
@@ -414,16 +423,24 @@ function refreshSelectDisplays() {
 let saveTimer;
 function flashSaved() {
   const el = $('saved');
+  if (!el) return;
   el.classList.add('show');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => el.classList.remove('show'), 1200);
 }
 
-function persist() {
-  chrome.storage.sync.set(current, flashSaved);
+let persistDebounceTimer = null;
+function persist(delay = 20) {
+  clearTimeout(persistDebounceTimer);
+  persistDebounceTimer = setTimeout(() => {
+    chrome.storage.sync.set(current, flashSaved);
+  }, delay);
 }
 
-function onChange() {
+function onChange(e) {
+  const isColor = e && e.target && e.target.type === 'color';
+  const delay = isColor ? 150 : 20;
+
   const prevProvider = current.provider;
   for (const [id, kind] of Object.entries(FIELDS)) {
     current[id] = readControl(id, kind);
@@ -453,7 +470,7 @@ function onChange() {
 
   updateOutputs();
   renderPreview();
-  persist();
+  persist(delay);
 }
 
 function onModelChange() {
@@ -761,7 +778,298 @@ document.addEventListener('DOMContentLoaded', async () => {
     persist();
   });
   $('apply').addEventListener('click', applyToVideo);
+
+  // Tab navigation & Saved Words listeners
+  initTabs();
+  loadSavedWords();
+
+  $('savedSearchInput')?.addEventListener('input', renderSavedWords);
+  $('exportAnkiBtn')?.addEventListener('click', exportAnkiCsv);
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.savedWords) {
+      allSavedWords = changes.savedWords.newValue || [];
+      updateSavedCountBadge();
+      renderSavedWords();
+    }
+  });
 });
+
+/* ─── Saved Words & Anki Export System ─────────────────── */
+let allSavedWords = [];
+
+async function loadSavedWords() {
+  try {
+    const data = await chrome.storage.local.get({ savedWords: [] });
+    allSavedWords = data.savedWords || [];
+    updateSavedCountBadge();
+    renderSavedWords();
+  } catch (e) {
+    console.warn('[ytfa] failed to load savedWords:', e);
+  }
+}
+
+function updateSavedCountBadge() {
+  const badge = $('savedCountBadge');
+  if (badge) badge.textContent = allSavedWords.length;
+}
+
+function formatTimestamp(sec) {
+  if (!sec && sec !== 0) return '00:00';
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function formatDate(isoStr) {
+  if (!isoStr) return '';
+  try {
+    const d = new Date(isoStr);
+    return d.toLocaleDateString('fa-IR');
+  } catch (e) {
+    return isoStr.slice(0, 10);
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightWordInSentence(sentence, word) {
+  if (!sentence) return '';
+  if (!word) return escapeHtml(sentence);
+  const escaped = escapeHtml(sentence);
+  const regex = new RegExp(`\\b(${escapeRegExp(word)})\\b`, 'gi');
+  return escaped.replace(regex, '<mark class="hl-word">$1</mark>');
+}
+
+function renderSavedWords() {
+  const container = $('savedWordsList');
+  if (!container) return;
+
+  const query = ($('savedSearchInput')?.value || '').trim().toLowerCase();
+  const filtered = allSavedWords.filter((item) => {
+    if (!query) return true;
+    const wordMatch = (item.word || '').toLowerCase().includes(query);
+    const wordFaMatch = (item.wordFa || '').toLowerCase().includes(query);
+    const enMatch = (item.en || '').toLowerCase().includes(query);
+    const faMatch = (item.fa || '').toLowerCase().includes(query);
+    const titleMatch = (item.title || '').toLowerCase().includes(query);
+    return wordMatch || wordFaMatch || enMatch || faMatch || titleMatch;
+  });
+
+  if (!filtered.length) {
+    if (allSavedWords.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔤</div>
+          <h3>هنوز کلمه‌ای ذخیره نشده است</h3>
+          <p>هنگام تماشای ویدیو در یوتیوب، با کلیک مستقیم روی هر کلمه در زیرنویس انگلیسی، آن را همراه با جمله ذخیره کنید.</p>
+        </div>`;
+    } else {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🔍</div>
+          <h3>نتیجه‌ای یافت نشد</h3>
+          <p>هیچ کلمه‌ای با عبارت "${escapeHtml(query)}" تطابق ندارد.</p>
+        </div>`;
+    }
+    return;
+  }
+
+  container.innerHTML = filtered
+    .map(
+      (item) => `
+    <div class="saved-card" data-id="${item.id}">
+      <div class="saved-card-header">
+        <div class="saved-word-badge" dir="ltr">${escapeHtml(item.word || item.en)}</div>
+        <button type="button" class="btn-delete-saved" data-id="${item.id}" title="حذف کلمه">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+
+      <div class="word-fa-field">
+        <label class="word-fa-label">
+          <span>معنی کلمه:</span>
+          <div class="word-fa-input-wrap">
+            <input type="text" class="input-word-fa" data-id="${item.id}" value="${escapeHtml(item.wordFa || '')}" placeholder="معنی فارسی این کلمه را وارد کنید…" dir="rtl" />
+            <button type="button" class="btn-ai-translate" data-id="${item.id}" title="ترجمه هوشمند معنی کلمه با AI / گوگل">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            </button>
+          </div>
+          <span class="word-fa-status" id="status-${item.id}"></span>
+        </label>
+      </div>
+
+      <div class="sentence-context-box">
+        <div class="saved-en-context" dir="ltr">${highlightWordInSentence(item.en, item.word)}</div>
+        <div class="saved-fa-context" dir="rtl">${escapeHtml(item.fa || '—')}</div>
+      </div>
+
+      <div class="saved-meta">
+        <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" class="saved-url-link" title="${escapeHtml(item.title)}">
+          <span class="saved-title">${escapeHtml(item.title || 'ویدیو یوتیوب')}</span>
+          <span class="saved-timestamp">@ ${formatTimestamp(item.timestamp)}</span>
+        </a>
+        <span class="saved-date">${formatDate(item.dateAdded)}</span>
+      </div>
+    </div>`
+    )
+    .join('');
+
+  container.querySelectorAll('.btn-delete-saved').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      allSavedWords = allSavedWords.filter((w) => w.id !== id);
+      await chrome.storage.local.set({ savedWords: allSavedWords });
+      updateSavedCountBadge();
+      renderSavedWords();
+    });
+  });
+
+  container.querySelectorAll('.btn-ai-translate').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const wordItem = allSavedWords.find((w) => w.id === id);
+      if (!wordItem) return;
+
+      const input = container.querySelector(`.input-word-fa[data-id="${id}"]`);
+      const statusEl = document.getElementById(`status-${id}`);
+
+      btn.classList.add('loading');
+      if (statusEl) statusEl.textContent = 'در حال ترجمه…';
+
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: 'TRANSLATE_WORD_DICTIONARY',
+          word: wordItem.word || wordItem.en,
+          sentence: wordItem.en
+        });
+
+        if (response && response.ok && response.translation) {
+          if (input) input.value = response.translation;
+          wordItem.wordFa = response.translation;
+          await chrome.storage.local.set({ savedWords: allSavedWords });
+          if (statusEl) statusEl.textContent = '✓ ذخیره شد';
+        } else {
+          if (statusEl) statusEl.textContent = 'خطا در دریافت';
+        }
+      } catch (err) {
+        console.error('[ytfa] AI word translate error:', err);
+        if (statusEl) statusEl.textContent = 'خطا';
+      } finally {
+        btn.classList.remove('loading');
+        setTimeout(() => {
+          if (statusEl && (statusEl.textContent === '✓ ذخیره شد' || statusEl.textContent === 'خطا' || statusEl.textContent === 'خطا در دریافت')) {
+            statusEl.textContent = '';
+          }
+        }, 1500);
+      }
+    });
+  });
+
+  container.querySelectorAll('.input-word-fa').forEach((input) => {
+    let saveTimeout = null;
+    const id = input.dataset.id;
+
+    input.addEventListener('input', () => {
+      const statusEl = document.getElementById(`status-${id}`);
+      if (statusEl) statusEl.textContent = '…';
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(async () => {
+        const val = input.value.trim();
+        const wordItem = allSavedWords.find((w) => w.id === id);
+        if (wordItem) {
+          wordItem.wordFa = val;
+          await chrome.storage.local.set({ savedWords: allSavedWords });
+          if (statusEl) {
+            statusEl.textContent = '✓ ذخیره شد';
+            setTimeout(() => {
+              if (statusEl) statusEl.textContent = '';
+            }, 1200);
+          }
+        }
+      }, 400);
+    });
+  });
+}
+
+function exportAnkiCsv() {
+  if (!allSavedWords.length) {
+    alert('کلمه‌ای برای دریافت خروجی ذخیره نشده است.');
+    return;
+  }
+
+  function escapeCsv(val) {
+    if (val == null) return '""';
+    return '"' + String(val).replace(/"/g, '""') + '"';
+  }
+
+  const rows = [
+    ['Word', 'Word Meaning', 'Sentence (EN)', 'Sentence (FA)', 'Video URL', 'Video Title'].map(escapeCsv).join(','),
+  ];
+
+  for (const item of allSavedWords) {
+    const word = item.word || item.en || '';
+    const wordFa = item.wordFa || '';
+    const sentenceEn = item.en || '';
+    const sentenceFa = item.fa || '';
+    const videoUrl = item.url || '';
+    const title = item.title || 'YouTube Video';
+
+    rows.push([
+      escapeCsv(word),
+      escapeCsv(wordFa),
+      escapeCsv(sentenceEn),
+      escapeCsv(sentenceFa),
+      escapeCsv(videoUrl),
+      escapeCsv(title)
+    ].join(','));
+  }
+
+  const csvContent = '\uFEFF' + rows.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `dualsub-anki-deck-${new Date().toISOString().slice(0, 10)}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetTabId = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      document.querySelectorAll('.tab-view').forEach((view) => {
+        if (view.id === targetTabId) {
+          view.hidden = false;
+          view.classList.add('active');
+        } else {
+          view.hidden = true;
+          view.classList.remove('active');
+        }
+      });
+    });
+  });
+}
 
 /* Force the open YouTube tab to re-read settings and re-render now. */
 async function applyToVideo() {

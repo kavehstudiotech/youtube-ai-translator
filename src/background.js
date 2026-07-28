@@ -537,6 +537,75 @@ async function openrouterChat({ apiKey, model, system, user, isJson = false }) {
   return data?.choices?.[0]?.message?.content || '';
 }
 
+async function translateWordDictionary(word, sentence, cfg) {
+  if (!word) return '';
+
+  if (cfg.provider === 'google_free') {
+    return await translateWordGoogleFree(word, sentence);
+  }
+
+  const system =
+    'You are a professional English-to-Persian (فارسی) dictionary assistant for language learners.\n' +
+    'You will be given an English word and the full sentence context where it appears.\n' +
+    'Your task is to:\n' +
+    '1. Identify the EXACT Persian meaning of the word in the context of the sentence, and write it FIRST wrapped in bold markdown (**مفهوم در جمله**).\n' +
+    '2. Provide 2 to 4 other common Persian synonyms or meanings of the word inside parentheses (...).\n' +
+    '3. Do NOT include any explanations, English text, introduction, or notes. Output ONLY the Persian result.\n' +
+    'Example output format:\n' +
+    '**می‌نویسد** (نوشتن، نگاشتن، ثبت کردن)';
+
+  const user = `Word: "${word}"\nSentence context: "${sentence || ''}"`;
+
+  const response = await llmChat({
+    system,
+    user,
+    cfg,
+    isJson: false
+  });
+
+  let cleaned = response.trim();
+  cleaned = cleaned.replace(/^```[a-zA-Z]*\s*/i, '').replace(/```\s*$/i, '').trim();
+  return cleaned;
+}
+
+async function translateWordGoogleFree(word, sentence) {
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fa&dt=t&dt=bd&q=${encodeURIComponent(word)}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('ERR_SERVER');
+    const data = await res.json();
+    
+    let mainTrans = '';
+    if (data && data[0] && data[0][0] && data[0][0][0]) {
+      mainTrans = data[0][0][0].trim();
+    }
+
+    const synonyms = [];
+    if (data && data[1] && Array.isArray(data[1])) {
+      data[1].forEach(dictGroup => {
+        if (dictGroup && Array.isArray(dictGroup[2])) {
+          dictGroup[2].forEach(item => {
+            if (item && item[0] && item[0] !== mainTrans && !synonyms.includes(item[0])) {
+              synonyms.push(item[0]);
+            }
+          });
+        }
+      });
+    }
+
+    const topSynonyms = synonyms.slice(0, 4);
+    if (mainTrans && topSynonyms.length) {
+      return `**${mainTrans}** (${topSynonyms.join('، ')})`;
+    } else if (mainTrans) {
+      return `**${mainTrans}**`;
+    }
+    return word;
+  } catch (e) {
+    console.error('[ytfa] Google word dictionary fetch failed:', e);
+    return await translateOneGoogleFree(word);
+  }
+}
+
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'update') {
     chrome.tabs.create({ url: chrome.runtime.getURL('public/changelog.html') });
@@ -566,6 +635,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       }
     })();
     return true; // keep the channel open for the async response
+  }
+
+  if (msg?.type === 'TRANSLATE_WORD_DICTIONARY') {
+    (async () => {
+      try {
+        const cfg = await getConfig();
+        const result = await translateWordDictionary(msg.word, msg.sentence, cfg);
+        sendResponse({ ok: true, translation: result });
+      } catch (e) {
+        sendResponse({ ok: false, error: String(e.message || e) });
+      }
+    })();
+    return true;
   }
 
   if (msg?.type === 'PING') {

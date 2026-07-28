@@ -23,7 +23,20 @@
     </label>
   </header>
 
+  <nav class="tabs-nav">
+    <button type="button" class="tab-btn active" data-tab="tab-settings">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>تنظیمات</span>
+    </button>
+    <button type="button" class="tab-btn" data-tab="tab-saved">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>کلمات ذخیره‌شده</span>
+      <span class="badge" id="savedCountBadge">0</span>
+    </button>
+  </nav>
+
   <main>
+    <div id="tab-settings" class="tab-view active">
     <!-- Connection -->
     <section class="card">
       <h2>تنظیمات سرویس ترجمه</h2>
@@ -243,6 +256,11 @@
         <span>نمایش انگلیسی بالا (ترجمه در پایین)</span>
       </label>
 
+      <label class="check">
+        <input type="checkbox" id="activeRecall" />
+        <span>حالت یادآوری فعال (مخفی‌سازی زیرنویس فارسی)</span>
+      </label>
+
       <div class="grid2">
         <label class="field">
           <span>اندازه فارسی</span>
@@ -318,8 +336,8 @@
       <h2>پیش‌نمایش</h2>
       <div class="preview">
         <div id="previewBar" dir="rtl">
-          <div id="previewFa" class="ytfa-fa">سلام، به ویدئوی امروز خوش آمدید.</div>
-          <div id="previewOrig" class="ytfa-orig" dir="ltr">Hi, welcome to today's video.</div>
+          <div id="previewFa" class="ytfa-fa">خوش آمدید</div>
+          <div id="previewOrig" class="ytfa-orig" dir="ltr">Welcome</div>
         </div>
       </div>
     </section>
@@ -328,6 +346,27 @@
     <div class="footer">
       <button id="reset" class="btn-ghost small">بازنشانی تنظیمات</button>
       <span class="saved" id="saved">ذخیره شد ✓</span>
+    </div>
+    </div> <!-- /tab-settings -->
+
+    <!-- Saved Words Tab -->
+    <div id="tab-saved" class="tab-view" hidden>
+      <section class="card saved-header-card">
+        <div class="saved-actions">
+          <div class="search-input-wrap">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="savedSearchInput" placeholder="جستجو در عبارت انگلیسی یا فارسی…" />
+          </div>
+          <button type="button" id="exportAnkiBtn" class="btn-anki" title="خروجی آنکی CSV">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>خروجی آنکی (.csv)</span>
+          </button>
+        </div>
+      </section>
+
+      <div id="savedWordsList" class="saved-words-list">
+        <!-- Dynamically rendered cards -->
+      </div>
     </div>
   </main>
 
