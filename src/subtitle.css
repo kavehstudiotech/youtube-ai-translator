@@ -125,6 +125,23 @@
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
 }
 
+/* Multi-Word Expressions & Phrasal Verbs Styling */
+#ytfa-bar .ytfa-orig .ytfa-word.ytfa-phrase {
+  border-bottom: 1.5px dashed rgba(168, 85, 247, 0.7);
+  padding: 0 3px;
+  margin: 0 1px;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.12);
+}
+
+#ytfa-bar .ytfa-orig .ytfa-word.ytfa-phrase:hover {
+  background: rgba(168, 85, 247, 0.35);
+  color: #e9d5ff;
+  box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4);
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
+  border-bottom-color: transparent;
+}
+
 #ytfa-bar .ytfa-orig {
   direction: ltr;
   margin-top: 2px;

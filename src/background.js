@@ -90,40 +90,59 @@ async function getConfig() {
 
 /**
  * Translate an array of strings to Persian in a single request.
- * Returns an array of the same length, in the same order.
+ * Returns an object with `translations` (array) and `phrases` (array of string arrays).
  */
 async function translateBatch(texts, cfg) {
-  if (!texts.length) return [];
+  if (!texts.length) return { translations: [], phrases: [] };
 
   // Serve from cache where possible; only send the misses.
   const missesIdx = [];
-  const result = new Array(texts.length);
+  const resultTranslations = new Array(texts.length);
+  const resultPhrases = new Array(texts.length).fill(null).map(() => []);
+
   texts.forEach((t, i) => {
-    if (cache.has(t) && cache.get(t) !== "") result[i] = cache.get(t);
-    else missesIdx.push(i);
+    if (cache.has(t)) {
+      const entry = cache.get(t);
+      if (typeof entry === 'object' && entry !== null && entry.fa !== undefined) {
+        if (entry.fa !== "") {
+          resultTranslations[i] = entry.fa;
+          resultPhrases[i] = entry.phrases || [];
+        }
+      } else if (typeof entry === 'string' && entry !== "") {
+        resultTranslations[i] = entry;
+        resultPhrases[i] = [];
+      }
+    }
+    if (resultTranslations[i] === undefined) missesIdx.push(i);
   });
-  if (!missesIdx.length) return result;
+
+  if (!missesIdx.length) {
+    return { translations: resultTranslations, phrases: resultPhrases };
+  }
 
   const missTexts = missesIdx.map((idx) => texts[idx]);
 
   // Route requests based on provider
-  let translations = [];
+  let batchRes = { translations: [], phrases: [] };
   if (cfg.provider === 'google_free') {
     await throttleRequest(15);
-    translations = await translateGoogleFree(missTexts);
+    const googleTrans = await translateGoogleFree(missTexts);
+    batchRes = { translations: googleTrans, phrases: missTexts.map(() => []) };
   } else {
-    translations = await translateLLMBatch(missTexts, cfg);
+    batchRes = await translateLLMBatch(missTexts, cfg);
   }
 
   missesIdx.forEach((idx, i) => {
-    const fa = (translations[i] !== undefined ? translations[i] : texts[idx]).trim();
+    const fa = (batchRes.translations[i] !== undefined ? batchRes.translations[i] : texts[idx]).trim();
+    const phrases = (batchRes.phrases && batchRes.phrases[i]) ? batchRes.phrases[i] : [];
     if (fa !== "") {
-      cache.set(texts[idx], fa);
+      cache.set(texts[idx], { fa, phrases });
     }
-    result[idx] = fa;
+    resultTranslations[idx] = fa;
+    resultPhrases[idx] = phrases;
   });
 
-  return result;
+  return { translations: resultTranslations, phrases: resultPhrases };
 }
 
 async function translateGoogleFree(texts) {
@@ -223,16 +242,16 @@ async function translateOneGoogleFree(text) {
 
 /** Translate the whole batch using LLM. Falls back to sequential individual translation on mismatch. */
 async function translateLLMBatch(missTexts, cfg) {
-  let translations = [];
+  let batchRes = { translations: [], phrases: [] };
 
   // Attempt 1: Standard Delimiter Batch (JSON Array Mode)
   try {
     console.log(`[ytfa] Attempt 1: Batch translation for ${missTexts.length} items.`);
-    translations = await batchRequestLLM(missTexts, cfg, false);
-    if (translations.length === missTexts.length) {
-      return translations;
+    batchRes = await batchRequestLLM(missTexts, cfg, false);
+    if (batchRes.translations.length === missTexts.length) {
+      return batchRes;
     }
-    console.warn(`[ytfa] Attempt 1 misaligned. Expected ${missTexts.length}, got ${translations.length}.`);
+    console.warn(`[ytfa] Attempt 1 misaligned. Expected ${missTexts.length}, got ${batchRes.translations.length}.`);
   } catch (e) {
     console.error(`[ytfa] Attempt 1 batch request failed:`, e);
   }
@@ -240,11 +259,11 @@ async function translateLLMBatch(missTexts, cfg) {
   // Attempt 2: Stricter Batch Retry (JSON Array Mode)
   try {
     console.log(`[ytfa] Attempt 2: Retrying with stricter instructions...`);
-    translations = await batchRequestLLM(missTexts, cfg, true);
-    if (translations.length === missTexts.length) {
-      return translations;
+    batchRes = await batchRequestLLM(missTexts, cfg, true);
+    if (batchRes.translations.length === missTexts.length) {
+      return batchRes;
     }
-    console.warn(`[ytfa] Attempt 2 misaligned. Expected ${missTexts.length}, got ${translations.length}.`);
+    console.warn(`[ytfa] Attempt 2 misaligned. Expected ${missTexts.length}, got ${batchRes.translations.length}.`);
   } catch (e) {
     console.error(`[ytfa] Attempt 2 batch retry failed:`, e);
   }
@@ -252,8 +271,8 @@ async function translateLLMBatch(missTexts, cfg) {
   // Safe & Strictly Sequential Fallback (100% RPM-Safe)
   // We translate the failed batch lines one by one, sequentially.
   console.warn(`[ytfa] Batch translation failed. Falling back to sequential individual translation.`);
-  translations = await translateIndividuallyLLM(missTexts, cfg);
-  return translations;
+  const translations = await translateIndividuallyLLM(missTexts, cfg);
+  return { translations, phrases: missTexts.map(() => []) };
 }
 
 /** Strictly Sequential and RPM-safe Individual Fallback with proper error propagation */
@@ -290,21 +309,27 @@ async function batchRequestLLM(missTexts, cfg, strict = false) {
   });
 
   let system =
-    'You are a professional subtitle translator. You will receive a JSON object of English subtitle strings, where each key represents the line index.\n' +
+    'You are a professional subtitle translator and linguistic expert. You will receive a JSON object of English subtitle strings, where each key represents the line index.\n' +
     'Translate each string into natural, fluent, conversational Persian (فارسی).\n' +
-    'Your output must be a valid JSON object containing the translations under the key "translations", using the EXACT SAME numeric keys as the input.\n' +
+    'Additionally, identify any phrasal verbs, idioms, or multi-word expressions (e.g. "look after", "give up", "take care of", "as well as") present in each line, and include them in the "phrases" object mapping line index to an array of detected multi-word expressions.\n' +
+    'Your output must be a valid JSON object containing both "translations" and "phrases" under their respective keys, using the EXACT SAME numeric keys as the input.\n' +
     'Do not omit any keys, do not skip any lines, and do not combine translation strings.\n' +
+    'If no multi-word expressions exist in a line, provide an empty array [] for that key in "phrases".\n' +
     'Do not include any explanation, notes, or markdown formatting (except standard JSON).\n' +
     'Example output format:\n' +
     '{\n' +
     '  "translations": {\n' +
-    '    "0": "سلام",\n' +
+    '    "0": "من باید از برادرم مراقبت کنم",\n' +
     '    "1": "خوش آمدید"\n' +
+    '  },\n' +
+    '  "phrases": {\n' +
+    '    "0": ["look after"],\n' +
+    '    "1": []\n' +
     '  }\n' +
     '}';
 
   if (strict) {
-    system += `\nCRITICAL: The "translations" object MUST contain exactly all keys from "0" to "${missTexts.length - 1}".`;
+    system += `\nCRITICAL: The "translations" and "phrases" objects MUST contain exactly all keys from "0" to "${missTexts.length - 1}".`;
   }
 
   const content = await llmChat({
@@ -322,36 +347,39 @@ function parseJSONTranslations(content, expected) {
   let cleaned = content.trim();
   cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
+  const translations = new Array(expected).fill("");
+  const phrases = new Array(expected).fill(null).map(() => []);
+
   try {
     const parsed = JSON.parse(cleaned);
 
-    if (parsed && parsed.translations && typeof parsed.translations === 'object') {
-      const result = [];
-      for (let i = 0; i < expected; i++) {
-        const val = parsed.translations[String(i)];
-        result.push(val !== undefined ? String(val).trim() : "");
-      }
-      return result;
-    }
-
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      if (parsed[String(0)] !== undefined) {
-        const result = [];
+    if (parsed && typeof parsed === 'object') {
+      const transObj = parsed.translations || (parsed[String(0)] !== undefined && typeof parsed[String(0)] === 'string' ? parsed : null);
+      if (transObj && typeof transObj === 'object' && !Array.isArray(transObj)) {
         for (let i = 0; i < expected; i++) {
-          const val = parsed[String(i)];
-          result.push(val !== undefined ? String(val).trim() : "");
+          const val = transObj[String(i)];
+          translations[i] = val !== undefined ? String(val).trim() : "";
         }
-        return result;
+      } else if (Array.isArray(parsed)) {
+        parsed.forEach((x, i) => {
+          if (i < expected) translations[i] = String(x).trim();
+        });
       }
-    }
 
-    if (Array.isArray(parsed)) {
-      return parsed.map(x => String(x).trim());
+      if (parsed.phrases && typeof parsed.phrases === 'object') {
+        for (let i = 0; i < expected; i++) {
+          const pList = parsed.phrases[String(i)] || parsed.phrases[i];
+          if (Array.isArray(pList)) {
+            phrases[i] = pList.map(p => String(p).trim()).filter(Boolean);
+          }
+        }
+      }
     }
   } catch (e) {
     console.error('[ytfa] Failed to parse JSON translations:', e, 'Raw content:', content);
   }
-  return [];
+
+  return { translations, phrases };
 }
 
 /** Translate a single line of text directly. */
@@ -629,7 +657,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         }
 
         const out = await translateBatch(msg.texts, cfg);
-        sendResponse({ ok: true, translations: out });
+        sendResponse({ ok: true, translations: out.translations, phrases: out.phrases });
       } catch (e) {
         sendResponse({ ok: false, error: String(e.message || e) });
       }

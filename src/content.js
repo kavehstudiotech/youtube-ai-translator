@@ -48,11 +48,11 @@ function getCachedCaption(videoId, sourceText) {
   return value;
 }
 
-function cacheCaption(videoId, sourceText, translatedText) {
+function cacheCaption(videoId, sourceText, translatedText, phrases = []) {
   if (!videoId || !sourceText) return;
   const key = getCaptionCacheKey(videoId, sourceText);
   captionCache.delete(key);
-  captionCache.set(key, translatedText);
+  captionCache.set(key, { fa: translatedText, phrases: phrases || [] });
 
   while (captionCache.size > MAX_CACHE_SIZE) {
     const oldestKey = captionCache.keys().next().value;
@@ -64,7 +64,15 @@ function cacheCaption(videoId, sourceText, translatedText) {
 function applyCachedCaptions(videoId, cues) {
   for (const cue of cues) {
     const cached = getCachedCaption(videoId, cue.text);
-    if (cached !== undefined) cue.fa = cached;
+    if (cached !== undefined) {
+      if (typeof cached === 'object' && cached !== null && cached.fa !== undefined) {
+        cue.fa = cached.fa;
+        cue.phrases = cached.phrases || [];
+      } else {
+        cue.fa = cached;
+        cue.phrases = cue.phrases || [];
+      }
+    }
   }
 }
 
@@ -192,15 +200,97 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
 let bar, faEl, origEl;
 
-function renderClickableOriginalText(text) {
+const COMMON_MULTI_WORD_EXPRESSIONS = [
+  'look after', 'look for', 'look forward to', 'look into', 'look up', 'look out', 'look back', 'look at',
+  'take care of', 'take care', 'take off', 'take over', 'take on', 'take out', 'take up', 'take in',
+  'give up', 'give in', 'give away', 'give back', 'give out',
+  'turn on', 'turn off', 'turn up', 'turn down', 'turn out', 'turn in', 'turn over',
+  'get up', 'get out', 'get back', 'get along', 'get in', 'get off', 'get away', 'get over', 'get through', 'get by',
+  'go on', 'go off', 'go out', 'go back', 'go through', 'go over', 'go away',
+  'come on', 'come in', 'come back', 'come out', 'come up', 'come across', 'come over',
+  'set up', 'set off', 'set out', 'put on', 'put off', 'put out', 'put away', 'put up',
+  'run out', 'run into', 'run away', 'find out', 'figure out', 'work out', 'break down', 'break out', 'break up',
+  'bring up', 'bring out', 'carry out', 'call off', 'check in', 'check out', 'drop off', 'hold on', 'keep up',
+  'point out', 'shut up', 'stand up', 'sit down', 'wake up', 'make up', 'pass out', 'pay back',
+  'as well as', 'at least', 'so that', 'in order to', 'according to', 'because of', 'due to',
+  'instead of', 'as long as', 'as soon as', 'by the way', 'for example', 'for instance',
+  'in spite of', 'kind of', 'sort of', 'a lot of', 'lots of', 'at all', 'right now', 'so far'
+];
+
+function getFallbackPhrases(text) {
+  if (!text) return [];
+  const matches = [];
+  const lowerText = text.toLowerCase();
+  for (const expr of COMMON_MULTI_WORD_EXPRESSIONS) {
+    const escaped = expr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (regex.test(lowerText)) {
+      matches.push(expr);
+    }
+  }
+  return matches;
+}
+
+function renderClickableOriginalText(text, phrases) {
   if (!origEl) return;
   origEl.textContent = '';
   if (!text) return;
 
+  let effectivePhrases = (Array.isArray(phrases) && phrases.length) ? phrases : getFallbackPhrases(text);
+
+  // Remove duplicates and sort by length descending to prioritize longer multi-word phrases
+  effectivePhrases = Array.from(new Set(effectivePhrases))
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  // Find all non-overlapping occurrences of phrases in text
+  const ranges = [];
+  for (const phrase of effectivePhrases) {
+    const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+    let m;
+    while ((m = regex.exec(text)) !== null) {
+      const start = m.index;
+      const end = start + m[0].length;
+      // Check if overlaps with an already chosen longer phrase match
+      const overlaps = ranges.some(r => !(end <= r.start || start >= r.end));
+      if (!overlaps) {
+        ranges.push({ start, end, phrase, matchedText: m[0] });
+      }
+    }
+  }
+
+  ranges.sort((a, b) => a.start - b.start);
+
+  let lastIndex = 0;
+  for (const range of ranges) {
+    if (range.start > lastIndex) {
+      renderSingleWords(text.slice(lastIndex, range.start), origEl);
+    }
+
+    const span = document.createElement('span');
+    span.className = 'ytfa-word ytfa-phrase';
+    span.textContent = range.matchedText;
+    span.dataset.word = range.phrase;
+    span.addEventListener('click', (e) => {
+      e.stopPropagation();
+      onWordClick(span, range.phrase);
+    });
+    origEl.appendChild(span);
+
+    lastIndex = range.end;
+  }
+
+  if (lastIndex < text.length) {
+    renderSingleWords(text.slice(lastIndex), origEl);
+  }
+}
+
+function renderSingleWords(subText, parentEl) {
   const regex = /([\w\u0600-\u06FF']+)|([^\w\u0600-\u06FF']+)/g;
   let match;
 
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = regex.exec(subText)) !== null) {
     const wordToken = match[1];
     const nonWordToken = match[2];
 
@@ -213,9 +303,9 @@ function renderClickableOriginalText(text) {
         e.stopPropagation();
         onWordClick(span, wordToken);
       });
-      origEl.appendChild(span);
+      parentEl.appendChild(span);
     } else if (nonWordToken) {
-      origEl.appendChild(document.createTextNode(nonWordToken));
+      parentEl.appendChild(document.createTextNode(nonWordToken));
     }
   }
 }
@@ -226,6 +316,20 @@ async function onWordClick(spanEl, word) {
 
   spanEl.classList.add('ytfa-word-saved');
   setTimeout(() => spanEl.classList.remove('ytfa-word-saved'), 800);
+
+  let wordFa = '';
+  try {
+    const dictResp = await chrome.runtime.sendMessage({
+      type: 'TRANSLATE_WORD_DICTIONARY',
+      word: word,
+      sentence: cue.text || ''
+    });
+    if (dictResp?.ok && dictResp.translation) {
+      wordFa = dictResp.translation;
+    }
+  } catch (err) {
+    console.warn('[ytfa] Dictionary fetch failed for word/phrase:', word, err);
+  }
 
   const vId = state.videoId || getVideoIdFromUrl() || 'video';
   const video = getVideo();
@@ -238,7 +342,7 @@ async function onWordClick(spanEl, word) {
   const newItem = {
     id: 'sw_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
     word: word,
-    wordFa: '',
+    wordFa: wordFa,
     en: cue.text || '',
     fa: cue.fa || '',
     title: rawTitle || 'ویدیو یوتیوب',
@@ -251,16 +355,20 @@ async function onWordClick(spanEl, word) {
   const data = await chrome.storage.local.get({ savedWords: [] });
   let savedWords = data.savedWords || [];
 
-  const exists = savedWords.some(
+  const existsIndex = savedWords.findIndex(
     (item) => (item.word || item.en) === word && item.en === cue.text && item.videoId === vId
   );
 
-  if (!exists) {
+  if (existsIndex === -1) {
     savedWords.unshift(newItem);
     await chrome.storage.local.set({ savedWords });
-    notify(`کلمه "${word}" به فلاش‌کارت‌ها اضافه شد ✓`);
+    notify(`عبارت "${word}" به فلاش‌کارت‌ها اضافه شد ✓`);
   } else {
-    notify(`کلمه "${word}" قبلاً ذخیره شده است.`);
+    if (wordFa && !savedWords[existsIndex].wordFa) {
+      savedWords[existsIndex].wordFa = wordFa;
+      await chrome.storage.local.set({ savedWords });
+    }
+    notify(`عبارت "${word}" قبلاً ذخیره شده است.`);
   }
 }
 
@@ -653,7 +761,7 @@ function showCue(cue) {
   }
 
   faEl.textContent = cue.fa || '…';
-  renderClickableOriginalText(cue.text || '');
+  renderClickableOriginalText(cue.text || '', cue.phrases);
   if (subtitleVisible) bar.classList.add('ytfa-visible');
 }
 
@@ -711,7 +819,7 @@ async function fetchCues(url) {
     if (!text) continue;
     const start = (ev.tStartMs || 0) / 1000;
     const dur = (ev.dDurationMs || 0) / 1000;
-    cues.push({ start, end: start + (dur || 4), text, fa: '' });
+    cues.push({ start, end: start + (dur || 4), text, fa: '', phrases: [] });
   }
 
   cues.sort((a, b) => a.start - b.start);
@@ -850,7 +958,8 @@ async function translateAll() {
             if (cue) {
               // برای جلوگیری از گیر کردن، اگر ترجمه خالی بود یک فاصله قرار می‌دهیم
               cue.fa = fa ? fa : ' ';
-              cacheCaption(translationVideoId, cue.text, cue.fa);
+              cue.phrases = (resp.phrases && Array.isArray(resp.phrases[j])) ? resp.phrases[j] : [];
+              cacheCaption(translationVideoId, cue.text, cue.fa, cue.phrases);
               if (!fa) console.warn(`[ytfa] Empty translation for cue ${cueIdx}`);
             }
           });
