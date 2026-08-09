@@ -53,6 +53,7 @@ const DEFAULTS = {
   customApiKey: '',
   customModel: '',
   rpm: 15,
+  translationDomain: 'auto',
   modelRpms: {
     'anthropic/claude-3.5-sonnet': 15,
     'openai/gpt-4o': 15,
@@ -88,11 +89,131 @@ async function getConfig() {
   return { ...DEFAULTS, ...stored };
 }
 
+/* ─────────── Video Domain Detection & Specialized Prompts ─────────── */
+
+/**
+ * Detect video domain from YouTube metadata.
+ * Returns one of: 'tech', 'medical', 'finance', 'general'
+ */
+function detectVideoDomain(videoMeta) {
+  if (!videoMeta) return 'general';
+
+  const title = (videoMeta.title || '').toLowerCase();
+  const category = (videoMeta.category || '').toLowerCase();
+  const keywords = (videoMeta.keywords || []).map(k => k.toLowerCase());
+  const desc = (videoMeta.shortDescription || '').toLowerCase();
+  const combined = `${title} ${category} ${keywords.join(' ')} ${desc}`;
+
+  const DOMAIN_RULES = {
+    tech: {
+      categories: ['science & technology', 'science', 'technology', 'gaming'],
+      keywords: [
+        'programming', 'software', 'developer', 'code', 'coding', 'api',
+        'javascript', 'python', 'react', 'algorithm', 'database', 'cloud',
+        'machine learning', 'deep learning', 'neural', 'ai ', 'artificial intelligence',
+        'devops', 'docker', 'kubernetes', 'linux', 'server', 'backend', 'frontend',
+        'framework', 'library', 'tutorial', 'web development', 'mobile app',
+        'css', 'html', 'typescript', 'rust', 'golang', 'java', 'c++',
+        'computer science', 'data structure', 'engineering', 'robotics',
+        'cybersecurity', 'hacking', 'network', 'hardware', 'gpu', 'cpu',
+        'tech review', 'gadget', 'smartphone', 'processor', 'benchmark'
+      ]
+    },
+    medical: {
+      categories: ['science & technology', 'education'],
+      keywords: [
+        'medical', 'medicine', 'doctor', 'patient', 'disease', 'diagnosis',
+        'surgery', 'clinical', 'therapy', 'treatment', 'pharmaceutical',
+        'biology', 'biochemistry', 'genetics', 'genome', 'dna', 'rna',
+        'cell', 'molecular', 'neuroscience', 'anatomy', 'physiology',
+        'pathology', 'immunology', 'oncology', 'cardiology', 'dermatology',
+        'health', 'healthcare', 'hospital', 'nurse', 'symptom',
+        'virus', 'bacteria', 'infection', 'vaccine', 'antibody',
+        'psychology', 'psychiatry', 'mental health', 'brain',
+        'biotech', 'bioinformatics', 'evolution', 'ecology', 'organism'
+      ]
+    },
+    finance: {
+      categories: ['education', 'news & politics', 'howto & style'],
+      keywords: [
+        'finance', 'financial', 'investment', 'investing', 'stock', 'stocks',
+        'market', 'trading', 'trader', 'forex', 'crypto', 'bitcoin',
+        'ethereum', 'blockchain', 'portfolio', 'dividend', 'bond',
+        'economy', 'economic', 'inflation', 'gdp', 'interest rate',
+        'banking', 'bank', 'mortgage', 'credit', 'debt', 'loan',
+        'accounting', 'audit', 'tax', 'revenue', 'profit', 'loss',
+        'startup', 'venture capital', 'ipo', 'valuation', 'asset',
+        'wealth', 'retirement', 'pension', 'real estate', 'property',
+        'insurance', 'fintech', 'money', 'budget', 'savings'
+      ]
+    }
+  };
+
+  const scores = { tech: 0, medical: 0, finance: 0 };
+
+  for (const [domain, rules] of Object.entries(DOMAIN_RULES)) {
+    if (rules.categories.some(c => category.includes(c))) {
+      scores[domain] += 3;
+    }
+    for (const kw of rules.keywords) {
+      if (combined.includes(kw)) scores[domain] += 1;
+    }
+  }
+
+  const best = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+  if (best[1] >= 4) return best[0];
+  return 'general';
+}
+
+const DOMAIN_PROMPTS = {
+  general:
+    'You are a professional subtitle translator and linguistic expert. ' +
+    'Translate each string into natural, fluent, conversational Persian (فارسی).',
+
+  tech:
+    'You are a specialized technical and software engineering translator with deep expertise in computer science, ' +
+    'programming, and technology. Translate each subtitle string into precise, natural Persian (فارسی).\n' +
+    'CRITICAL RULES for technical content:\n' +
+    '- Keep all technical terms, library/framework names, programming keywords, and brand names in English ' +
+    '  (e.g. React, API, Docker, Kubernetes, GPU, CPU, Python, JavaScript, REST, GraphQL, etc.).\n' +
+    '- Translate conceptual explanations fluently but preserve technical accuracy.\n' +
+    '- For acronyms like CI/CD, OOP, SQL, HTTP, keep them in English.\n' +
+    '- Use established Persian equivalents where widely accepted ' +
+    '  (e.g. "پایگاه داده" for database, "الگوریتم" for algorithm, "شبکه عصبی" for neural network).\n' +
+    '- Do NOT invent Persian equivalents for terms that the Persian tech community uses in English.',
+
+  medical:
+    'You are a specialized medical and biological sciences translator with deep expertise in medicine, ' +
+    'biology, biochemistry, and healthcare. Translate each subtitle string into precise, natural Persian (فارسی).\n' +
+    'CRITICAL RULES for medical/biological content:\n' +
+    '- Keep Latin/English scientific names (species names, gene names, drug brand names) as-is.\n' +
+    '- Use established Persian medical terminology where available ' +
+    '  (e.g. "سلول" for cell, "پروتئین" for protein, "ژن" for gene, "آنتی\u200cبادی" for antibody).\n' +
+    '- For anatomical terms, prefer the widely-used Persian equivalent if one exists, ' +
+    '  otherwise keep the English term.\n' +
+    '- Maintain precision: do NOT simplify or paraphrase technical medical statements.\n' +
+    '- For drug names, keep the generic name in English and add Persian description if contextually helpful.\n' +
+    '- Abbreviations like DNA, RNA, MRI, CT, ICU must remain in English.',
+
+  finance:
+    'You are a specialized financial and economics translator with deep expertise in finance, ' +
+    'investment, banking, and economics. Translate each subtitle string into precise, natural Persian (فارسی).\n' +
+    'CRITICAL RULES for financial content:\n' +
+    '- Keep English terms that the Persian financial community commonly uses in English ' +
+    '  (e.g. ETF, IPO, P/E ratio, ROI, GDP, hedge fund, short selling, bull/bear market).\n' +
+    '- Use established Persian equivalents for common financial concepts ' +
+    '  (e.g. "سهام" for stocks, "اوراق قرضه" for bonds, "نرخ بهره" for interest rate, ' +
+    '  "تورم" for inflation, "بازده" for return/yield).\n' +
+    '- Maintain numerical precision: do NOT alter figures, percentages, or currency values.\n' +
+    '- For cryptocurrency terms (blockchain, mining, staking, DeFi), keep English terms.\n' +
+    '- Preserve company names, ticker symbols, and index names in English (S&P 500, NASDAQ, etc.).'
+};
+
 /**
  * Translate an array of strings to Persian in a single request.
  * Returns an object with `translations` (array) and `phrases` (array of string arrays).
  */
-async function translateBatch(texts, cfg) {
+async function translateBatch(texts, cfg, videoMeta = null) {
   if (!texts.length) return { translations: [], phrases: [] };
 
   // Serve from cache where possible; only send the misses.
@@ -129,7 +250,26 @@ async function translateBatch(texts, cfg) {
     const googleTrans = await translateGoogleFree(missTexts);
     batchRes = { translations: googleTrans, phrases: missTexts.map(() => []) };
   } else {
-    batchRes = await translateLLMBatch(missTexts, cfg);
+    // Resolve domain once per video — only log when video or domain changes
+    let domain = 'general';
+    const DOMAIN_LABELS = { tech: '💻 فنی و تکنولوژی', medical: '🧬 پزشکی و بایولوژی', finance: '📊 مالی و اقتصادی', general: '📝 عمومی' };
+    const videoTitle = videoMeta?.title || '';
+
+    if (cfg.translationDomain && cfg.translationDomain !== 'auto') {
+      domain = cfg.translationDomain;
+    } else {
+      domain = detectVideoDomain(videoMeta);
+    }
+
+    // Log only once per video+domain combo to avoid console spam
+    const domainKey = `${videoTitle}_${domain}_${cfg.translationDomain || 'auto'}`;
+    if (domainKey !== translateBatch._lastDomainKey) {
+      translateBatch._lastDomainKey = domainKey;
+      const source = (cfg.translationDomain && cfg.translationDomain !== 'auto') ? '📌 دستی' : '🔍 خودکار';
+      console.log(`[ytfa] 📌 Translation domain: ${DOMAIN_LABELS[domain] || domain} | Source: ${source} | Video: "${videoTitle.slice(0, 70)}"`);
+    }
+
+    batchRes = await translateLLMBatch(missTexts, cfg, domain);
   }
 
   missesIdx.forEach((idx, i) => {
@@ -207,19 +347,38 @@ async function translateGoogleFree(texts) {
   return out;
 }
 
+/** Helper function to wrap fetch with AbortController timeout */
+async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      console.warn(`[ytfa] ⏱️ Fetch request timed out after ${timeoutMs}ms`);
+      throw new Error('ERR_TIMEOUT');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function translateOneGoogleFree(text) {
   const url = `https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=auto&tl=fa&dt=t`;
   try {
     let res;
     try {
-      res = await fetch(url, { 
+      res = await fetchWithTimeout(url, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: `q=${encodeURIComponent(text)}`
-      });
+      }, 10000);
     } catch (fetchErr) {
+      if (fetchErr.message === 'ERR_TIMEOUT') throw fetchErr;
       throw new Error('GOOGLE_CAPTCHA_OR_BLOCKED');
     }
 
@@ -241,46 +400,53 @@ async function translateOneGoogleFree(text) {
 }
 
 /** Translate the whole batch using LLM. Falls back to sequential individual translation on mismatch. */
-async function translateLLMBatch(missTexts, cfg) {
+async function translateLLMBatch(missTexts, cfg, domain = 'general') {
   let batchRes = { translations: [], phrases: [] };
 
   // Attempt 1: Standard Delimiter Batch (JSON Array Mode)
   try {
     console.log(`[ytfa] Attempt 1: Batch translation for ${missTexts.length} items.`);
-    batchRes = await batchRequestLLM(missTexts, cfg, false);
+    batchRes = await batchRequestLLM(missTexts, cfg, false, domain);
     if (batchRes.translations.length === missTexts.length) {
       return batchRes;
     }
     console.warn(`[ytfa] Attempt 1 misaligned. Expected ${missTexts.length}, got ${batchRes.translations.length}.`);
   } catch (e) {
-    console.error(`[ytfa] Attempt 1 batch request failed:`, e);
+    if (e.message === 'ERR_TIMEOUT') {
+      console.warn(`[ytfa] ⏱️ Attempt 1 batch request timed out. Aborting hung request and retrying...`);
+    } else {
+      console.error(`[ytfa] Attempt 1 batch request failed:`, e);
+    }
   }
 
   // Attempt 2: Stricter Batch Retry (JSON Array Mode)
   try {
     console.log(`[ytfa] Attempt 2: Retrying with stricter instructions...`);
-    batchRes = await batchRequestLLM(missTexts, cfg, true);
+    batchRes = await batchRequestLLM(missTexts, cfg, true, domain);
     if (batchRes.translations.length === missTexts.length) {
       return batchRes;
     }
     console.warn(`[ytfa] Attempt 2 misaligned. Expected ${missTexts.length}, got ${batchRes.translations.length}.`);
   } catch (e) {
-    console.error(`[ytfa] Attempt 2 batch retry failed:`, e);
+    if (e.message === 'ERR_TIMEOUT') {
+      console.warn(`[ytfa] ⏱️ Attempt 2 batch request timed out.`);
+    } else {
+      console.error(`[ytfa] Attempt 2 batch retry failed:`, e);
+    }
   }
 
   // Safe & Strictly Sequential Fallback (100% RPM-Safe)
-  // We translate the failed batch lines one by one, sequentially.
   console.warn(`[ytfa] Batch translation failed. Falling back to sequential individual translation.`);
-  const translations = await translateIndividuallyLLM(missTexts, cfg);
+  const translations = await translateIndividuallyLLM(missTexts, cfg, domain);
   return { translations, phrases: missTexts.map(() => []) };
 }
 
 /** Strictly Sequential and RPM-safe Individual Fallback with proper error propagation */
-async function translateIndividuallyLLM(missTexts, cfg) {
+async function translateIndividuallyLLM(missTexts, cfg, domain = 'general') {
   const out = new Array(missTexts.length);
   for (let i = 0; i < missTexts.length; i++) {
     try {
-      out[i] = await translateOneLLM(missTexts[i], cfg);
+      out[i] = await translateOneLLM(missTexts[i], cfg, domain);
     } catch (e) {
       console.error(`[ytfa] Individual translation failed for index ${i}:`, e);
 
@@ -290,6 +456,7 @@ async function translateIndividuallyLLM(missTexts, cfg) {
         e.message === 'ERR_SERVER' ||
         e.message === 'ERR_400' ||
         e.message === 'ERR_NETWORK' ||
+        e.message === 'ERR_TIMEOUT' ||
         e.message === 'GOOGLE_CAPTCHA_OR_BLOCKED'
       ) {
         throw e; // شلیک خطا به لایه بالا
@@ -302,15 +469,17 @@ async function translateIndividuallyLLM(missTexts, cfg) {
 }
 
 /** JSON mode batch request with strict Key-Value indexing */
-async function batchRequestLLM(missTexts, cfg, strict = false) {
+async function batchRequestLLM(missTexts, cfg, strict = false, domain = 'general') {
   const payloadObject = {};
   missTexts.forEach((text, i) => {
     payloadObject[String(i)] = text;
   });
 
+  const domainBase = DOMAIN_PROMPTS[domain] || DOMAIN_PROMPTS.general;
+
   let system =
-    'You are a professional subtitle translator and linguistic expert. You will receive a JSON object of English subtitle strings, where each key represents the line index.\n' +
-    'Translate each string into natural, fluent, conversational Persian (فارسی).\n' +
+    domainBase + '\n' +
+    'You will receive a JSON object of English subtitle strings, where each key represents the line index.\n' +
     'Additionally, identify any phrasal verbs, idioms, or multi-word expressions (e.g. "look after", "give up", "take care of", "as well as") present in each line, and include them in the "phrases" object mapping line index to an array of detected multi-word expressions.\n' +
     'Your output must be a valid JSON object containing both "translations" and "phrases" under their respective keys, using the EXACT SAME numeric keys as the input.\n' +
     'Do not omit any keys, do not skip any lines, and do not combine translation strings.\n' +
@@ -332,11 +501,15 @@ async function batchRequestLLM(missTexts, cfg, strict = false) {
     system += `\nCRITICAL: The "translations" and "phrases" objects MUST contain exactly all keys from "0" to "${missTexts.length - 1}".`;
   }
 
+  // Dynamic timeout: base 15 seconds + 1.5 seconds per item, capped between 15s and 25s
+  const timeoutMs = Math.min(25000, Math.max(15000, missTexts.length * 1500));
+
   const content = await llmChat({
     system,
     user: JSON.stringify(payloadObject),
     cfg,
-    isJson: true
+    isJson: true,
+    timeoutMs
   });
 
   return parseJSONTranslations(content, missTexts.length);
@@ -383,17 +556,19 @@ function parseJSONTranslations(content, expected) {
 }
 
 /** Translate a single line of text directly. */
-async function translateOneLLM(text, cfg) {
+async function translateOneLLM(text, cfg, domain = 'general') {
+  const domainBase = DOMAIN_PROMPTS[domain] || DOMAIN_PROMPTS.general;
   const system =
-    'You are a professional subtitle translator. Translate the following single line ' +
-    'into natural, fluent, conversational Persian (فارسی).\n' +
+    domainBase + '\n' +
+    'Translate the following single subtitle line.\n' +
     'Output ONLY the translation, and do NOT include any introduction, notes, markdown formatting, or explanations.';
 
   const content = await llmChat({
     system,
     user: text,
     cfg,
-    isJson: false
+    isJson: false,
+    timeoutMs: 10000
   });
 
   let cleaned = content.trim();
@@ -422,7 +597,7 @@ function getActiveModel(cfg) {
 }
 
 /** Unified router for all LLM providers. */
-async function llmChat({ system, user, cfg, isJson = false }) {
+async function llmChat({ system, user, cfg, isJson = false, timeoutMs = 15000 }) {
   if (cfg.provider !== 'local') {
     const activeModel = getActiveModel(cfg);
     const modelRpm = (cfg.modelRpms && cfg.modelRpms[activeModel]) || cfg.rpm || 15;
@@ -431,38 +606,38 @@ async function llmChat({ system, user, cfg, isJson = false }) {
 
   if (cfg.provider === 'openrouter') {
     if (!cfg.apiKey) throw new Error('NO_API_KEY');
-    return openrouterChat({ apiKey: cfg.apiKey, model: cfg.model, system, user, isJson });
+    return openrouterChat({ apiKey: cfg.apiKey, model: cfg.model, system, user, isJson, timeoutMs });
   } else if (cfg.provider === 'gemini') {
     if (!cfg.geminiApiKey) throw new Error('NO_API_KEY');
-    return geminiChat({ apiKey: cfg.geminiApiKey, model: cfg.geminiModel, system, user, isJson });
+    return geminiChat({ apiKey: cfg.geminiApiKey, model: cfg.geminiModel, system, user, isJson, timeoutMs });
   } else if (cfg.provider === 'grok') {
     if (!cfg.grokApiKey) throw new Error('NO_API_KEY');
-    return openaiCompatibleChat({ baseUrl: 'https://api.groq.com/openai/v1', apiKey: cfg.grokApiKey, model: cfg.grokModel, system, user, isJson });
+    return openaiCompatibleChat({ baseUrl: 'https://api.groq.com/openai/v1', apiKey: cfg.grokApiKey, model: cfg.grokModel, system, user, isJson, timeoutMs });
   } else if (cfg.provider === 'deepseek') {
     if (!cfg.deepseekApiKey) throw new Error('NO_API_KEY');
-    return openaiCompatibleChat({ baseUrl: 'https://api.deepseek.com', apiKey: cfg.deepseekApiKey, model: cfg.deepseekModel, system, user, isJson });
+    return openaiCompatibleChat({ baseUrl: 'https://api.deepseek.com', apiKey: cfg.deepseekApiKey, model: cfg.deepseekModel, system, user, isJson, timeoutMs });
   } else if (cfg.provider === 'openai') {
     if (!cfg.openaiApiKey) throw new Error('NO_API_KEY');
-    return openaiCompatibleChat({ baseUrl: 'https://api.openai.com/v1', apiKey: cfg.openaiApiKey, model: cfg.openaiModel, system, user, isJson });
+    return openaiCompatibleChat({ baseUrl: 'https://api.openai.com/v1', apiKey: cfg.openaiApiKey, model: cfg.openaiModel, system, user, isJson, timeoutMs });
   } else if (cfg.provider === 'local') {
     const baseUrl = cfg.localBaseUrl || 'http://localhost:11434/v1';
-    return openaiCompatibleChat({ baseUrl, apiKey: null, model: cfg.localModel || 'llama3', system, user, isJson });
+    return openaiCompatibleChat({ baseUrl, apiKey: null, model: cfg.localModel || 'llama3', system, user, isJson, timeoutMs });
   } else if (cfg.provider === 'custom') {
     if (!cfg.customBaseUrl) throw new Error('NO_BASE_URL');
-    return openaiCompatibleChat({ baseUrl: cfg.customBaseUrl, apiKey: cfg.customApiKey || null, model: cfg.customModel || '', system, user, isJson });
+    return openaiCompatibleChat({ baseUrl: cfg.customBaseUrl, apiKey: cfg.customApiKey || null, model: cfg.customModel || '', system, user, isJson, timeoutMs });
   }
   throw new Error(`Unknown provider: ${cfg.provider}`);
 }
 
 /** Google AI Studio (Gemini) API Chat */
-async function geminiChat({ apiKey, model, system, user, isJson = false }) {
+async function geminiChat({ apiKey, model, system, user, isJson = false, timeoutMs = 15000 }) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const generationConfig = { temperature: 0.2 };
   if (isJson) generationConfig.responseMimeType = 'application/json';
 
   let res;
   try {
-    res = await fetch(url, {
+    res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -470,8 +645,9 @@ async function geminiChat({ apiKey, model, system, user, isJson = false }) {
         contents: [{ role: 'user', parts: [{ text: user }] }],
         generationConfig
       })
-    });
+    }, timeoutMs);
   } catch (fetchErr) {
+    if (fetchErr.message === 'ERR_TIMEOUT') throw fetchErr;
     throw new Error('ERR_NETWORK');
   }
 
@@ -487,7 +663,7 @@ async function geminiChat({ apiKey, model, system, user, isJson = false }) {
 }
 
 /** OpenAI Compatible API Chat with auto JSON fallback. */
-async function openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJson = false }) {
+async function openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJson = false, timeoutMs = 15000 }) {
   let url = baseUrl.trim();
   if (!url.endsWith('/chat/completions')) {
     url = url.replace(/\/$/, '') + '/chat/completions';
@@ -503,8 +679,9 @@ async function openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJs
 
   let res;
   try {
-    res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+    res = await fetchWithTimeout(url, { method: 'POST', headers, body: JSON.stringify(body) }, timeoutMs);
   } catch (fetchErr) {
+    if (fetchErr.message === 'ERR_TIMEOUT') throw fetchErr;
     throw new Error('ERR_NETWORK');
   }
 
@@ -512,7 +689,7 @@ async function openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJs
     const txt = await res.text().catch(() => '');
     if (res.status === 400 && isJson && (txt.includes('json_object') || txt.includes('response_format') || txt.includes('INVALID_REQUEST_BODY'))) {
       console.warn(`[ytfa] Provider/Model does not support native JSON mode. Retrying without response_format...`);
-      return openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJson: false });
+      return openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJson: false, timeoutMs });
     }
     if (res.status === 429) throw new Error('ERR_429');
     if (res.status === 401 || res.status === 403) throw new Error('ERR_AUTH');
@@ -525,7 +702,7 @@ async function openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJs
 }
 
 /** Shared OpenRouter chat-completion call returning the message content with auto JSON fallback. */
-async function openrouterChat({ apiKey, model, system, user, isJson = false }) {
+async function openrouterChat({ apiKey, model, system, user, isJson = false, timeoutMs = 15000 }) {
   const body = {
     model: model || DEFAULT_MODEL,
     temperature: 0.2,
@@ -535,7 +712,7 @@ async function openrouterChat({ apiKey, model, system, user, isJson = false }) {
 
   let res;
   try {
-    res = await fetch(OPENROUTER_URL, {
+    res = await fetchWithTimeout(OPENROUTER_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -544,8 +721,9 @@ async function openrouterChat({ apiKey, model, system, user, isJson = false }) {
         'X-Title': 'Persian YouTube Translator',
       },
       body: JSON.stringify(body),
-    });
+    }, timeoutMs);
   } catch (fetchErr) {
+    if (fetchErr.message === 'ERR_TIMEOUT') throw fetchErr;
     throw new Error('ERR_NETWORK');
   }
 
@@ -553,7 +731,7 @@ async function openrouterChat({ apiKey, model, system, user, isJson = false }) {
     const txt = await res.text().catch(() => '');
     if (res.status === 400 && isJson && (txt.includes('json_object') || txt.includes('response_format') || txt.includes('INVALID_REQUEST_BODY'))) {
       console.warn(`[ytfa] Model ${model} does not support native JSON mode. Retrying without response_format...`);
-      return openrouterChat({ apiKey, model, system, user, isJson: false });
+      return openrouterChat({ apiKey, model, system, user, isJson: false, timeoutMs });
     }
     if (res.status === 429) throw new Error('ERR_429');
     if (res.status === 401 || res.status === 403) throw new Error('ERR_AUTH');
@@ -588,7 +766,8 @@ async function translateWordDictionary(word, sentence, cfg) {
     system,
     user,
     cfg,
-    isJson: false
+    isJson: false,
+    timeoutMs: 8000
   });
 
   let cleaned = response.trim();
@@ -656,7 +835,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
           return;
         }
 
-        const out = await translateBatch(msg.texts, cfg);
+        const out = await translateBatch(msg.texts, cfg, msg.videoMeta || null);
         sendResponse({ ok: true, translations: out.translations, phrases: out.phrases });
       } catch (e) {
         sendResponse({ ok: false, error: String(e.message || e) });
@@ -691,12 +870,13 @@ chrome.storage.onChanged.addListener((changes, area) => {
       'deepseekApiKey', 'openaiApiKey',
       'model', 'geminiModel', 'localModel', 'customModel', 'grokModel',
       'deepseekModel', 'openaiModel',
-      'localBaseUrl', 'customBaseUrl'
+      'localBaseUrl', 'customBaseUrl', 'translationDomain'
     ];
     const changed = keysToCheck.some(key => key in changes);
     if (changed) {
       console.log('[ytfa] Configuration changed. Clearing translation cache.');
       cache.clear();
+      translateBatch._lastDomainKey = null; // Reset domain log so it re-logs on next batch
     }
   }
 });

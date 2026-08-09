@@ -103,6 +103,7 @@ let state = {
   activeVideo: null,
   rafId: null,
   translationSessionId: 0,
+  videoMeta: null, // { title, category, keywords, shortDescription }
 };
 
 // Temporary visibility toggle (independent of settings.enabled).
@@ -148,7 +149,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
     'enabled', 'provider', 'apiKey', 'geminiApiKey', 'grokApiKey',
     'deepseekApiKey', 'openaiApiKey', 'model', 'geminiModel', 'grokModel',
     'deepseekModel', 'openaiModel', 'localBaseUrl', 'localModel',
-    'customBaseUrl', 'customApiKey', 'customModel', 'rpm'
+    'customBaseUrl', 'customApiKey', 'customModel', 'rpm', 'translationDomain'
   ]);
 
   for (const key of Object.keys(changes)) {
@@ -508,7 +509,13 @@ function attachBar() {
 
 /* ───────────────── floating toggle / retry button ────────────────────────── */
 
+/* ───────────────── floating toggle / progress / download controls ────────────── */
+
+let controlsWrap = null;
 let toggleBtn = null;
+let progressBadge = null;
+let dlEnBtn = null;
+let dlFaBtn = null;
 let ensureToggleBtnFrame = null;
 
 function getActiveShortsActionBar() {
@@ -555,9 +562,109 @@ function getToggleBtnHost() {
     player.querySelector('.ytp-chrome-controls');
 }
 
+function formatSecondsToSRT(sec) {
+  if (isNaN(sec) || sec < 0) sec = 0;
+  const hours = Math.floor(sec / 3600);
+  const minutes = Math.floor((sec % 3600) / 60);
+  const seconds = Math.floor(sec % 60);
+  const millis = Math.floor((sec % 1) * 1000);
+
+  const hh = String(hours).padStart(2, '0');
+  const mm = String(minutes).padStart(2, '0');
+  const ss = String(seconds).padStart(2, '0');
+  const mmm = String(millis).padStart(3, '0');
+
+  return `${hh}:${mm}:${ss},${mmm}`;
+}
+
+function exportCuesToSRT(cues, lang = 'fa') {
+  let srt = '';
+  let index = 1;
+  for (const cue of cues) {
+    const rawText = (lang === 'fa' ? (cue.fa && cue.fa.trim() !== '…' ? cue.fa : '') : cue.text) || '';
+    if (!rawText.trim()) continue;
+
+    const cleanText = rawText.replace(/<[^>]*>/g, '').replace(/\*\*(.*?)\*\*/g, '$1').trim();
+    const startTime = formatSecondsToSRT(cue.start);
+    const endTime = formatSecondsToSRT(cue.end);
+
+    srt += `${index}\n${startTime} --> ${endTime}\n${cleanText}\n\n`;
+    index++;
+  }
+  return srt;
+}
+
+function downloadSubtitles(lang = 'fa') {
+  if (!state.cues || !state.cues.length) {
+    notify('هیچ زیرنویسی برای دانلود موجود نیست.');
+    return;
+  }
+
+  const srtContent = exportCuesToSRT(state.cues, lang);
+  if (!srtContent.trim()) {
+    notify(`زیرنویس ${lang === 'fa' ? 'فارسی' : 'انگلیسی'} هنوز بارگذاری یا ترجمه نشده است.`);
+    return;
+  }
+
+  const titleRaw = state.videoMeta?.title || document.title.replace('- YouTube', '').trim() || 'YouTube_Subtitle';
+  const cleanTitle = titleRaw.replace(/[\\/:*?"<>|]/g, '_');
+  const filename = `${cleanTitle}_${lang.toUpperCase()}.srt`;
+
+  const blob = new Blob([srtContent], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 300);
+
+  notify(`زیرنویس ${lang === 'fa' ? 'فارسی' : 'انگلیسی'} با موفقیت دانلود شد: ${filename}`);
+}
+
+function updateProgressAndDownload() {
+  if (!progressBadge || !dlEnBtn || !dlFaBtn) return;
+
+  const totalCues = state.cues.length;
+  if (!totalCues) {
+    progressBadge.style.display = 'none';
+    dlEnBtn.style.display = 'none';
+    dlFaBtn.style.display = 'none';
+    return;
+  }
+
+  const translatedCount = state.cues.filter(
+    (c) => c.fa && c.fa.trim() !== '' && c.fa.trim() !== '…'
+  ).length;
+
+  const pct = Math.round((translatedCount / totalCues) * 100);
+
+  progressBadge.textContent = `${pct}%`;
+  progressBadge.dataset.tooltip = `درصد تکمیل زیرنویس: ${pct}% (${translatedCount} از ${totalCues} جمله)`;
+  progressBadge.classList.toggle('completed', pct === 100);
+  progressBadge.style.display = 'inline-flex';
+
+  // English button display
+  dlEnBtn.style.display = 'inline-flex';
+
+  // Persian button display
+  if (translatedCount > 0) {
+    dlFaBtn.style.display = 'inline-flex';
+    dlFaBtn.classList.toggle('completed', pct === 100);
+    dlFaBtn.dataset.tooltip = pct === 100
+      ? 'دانلود زیرنویس کامل فارسی (SRT)'
+      : `دانلود زیرنویس فارسی (SRT) — ${pct}% کامل شده`;
+  } else {
+    dlFaBtn.style.display = 'none';
+  }
+}
+
 function ensureToggleBtn() {
   if (!settings.enabled || !isYouTubeVideoPage()) {
-    if (toggleBtn) toggleBtn.style.display = 'none';
+    if (controlsWrap) controlsWrap.style.display = 'none';
     return;
   }
 
@@ -574,27 +681,60 @@ function ensureToggleBtn() {
   }
 
   if (!controls) {
-    if (toggleBtn) toggleBtn.style.display = 'none';
+    if (controlsWrap) controlsWrap.style.display = 'none';
     return;
   }
 
-  if (!toggleBtn) {
+  if (!controlsWrap) {
+    controlsWrap = document.createElement('div');
+    controlsWrap.id = 'ytfa-controls-wrap';
+
     toggleBtn = document.createElement('button');
     toggleBtn.id = 'ytfa-toggle-btn';
     toggleBtn.className = 'ytp-button';
     toggleBtn.type = 'button';
-
     const icon = document.createElement('span');
     icon.className = 'ytfa-btn-icon';
     toggleBtn.appendChild(icon);
-
     toggleBtn.addEventListener('click', onToggleBtnClick);
+    controlsWrap.appendChild(toggleBtn);
+
+    progressBadge = document.createElement('div');
+    progressBadge.id = 'ytfa-progress-badge';
+    progressBadge.style.display = 'none';
+    controlsWrap.appendChild(progressBadge);
+
+    dlEnBtn = document.createElement('button');
+    dlEnBtn.id = 'ytfa-dl-en-btn';
+    dlEnBtn.className = 'ytfa-dl-btn ytfa-dl-en';
+    dlEnBtn.type = 'button';
+    dlEnBtn.innerHTML = '<span>EN</span> 📥';
+    dlEnBtn.dataset.tooltip = 'دانلود زیرنویس انگلیسی (SRT)';
+    dlEnBtn.style.display = 'none';
+    dlEnBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      downloadSubtitles('en');
+    });
+    controlsWrap.appendChild(dlEnBtn);
+
+    dlFaBtn = document.createElement('button');
+    dlFaBtn.id = 'ytfa-dl-fa-btn';
+    dlFaBtn.className = 'ytfa-dl-btn ytfa-dl-fa';
+    dlFaBtn.type = 'button';
+    dlFaBtn.innerHTML = '<span>FA</span> 📥';
+    dlFaBtn.dataset.tooltip = 'دانلود زیرنویس فارسی (SRT)';
+    dlFaBtn.style.display = 'none';
+    dlFaBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      downloadSubtitles('fa');
+    });
+    controlsWrap.appendChild(dlFaBtn);
   }
 
   toggleBtn.classList.toggle('ytfa-shorts-btn', isShorts);
+  controlsWrap.classList.toggle('ytfa-shorts-wrap', isShorts);
 
   if (isShorts) {
-    // افزودن کلاس اختصاصی یوتیوب برای قرارگیری درست در ستون فلكس
     toggleBtn.classList.add('ytwReelActionBarViewModelHostDesktopActionButton');
 
     if (shortsLikeBtn) {
@@ -603,27 +743,27 @@ function ensureToggleBtn() {
         targetNode = targetNode.parentElement;
       }
       if (targetNode && targetNode.parentElement === controls) {
-        if (toggleBtn.nextSibling !== targetNode) {
-          controls.insertBefore(toggleBtn, targetNode);
+        if (controlsWrap.nextSibling !== targetNode) {
+          controls.insertBefore(controlsWrap, targetNode);
         }
       } else {
-        if (toggleBtn.parentElement !== controls || controls.firstChild !== toggleBtn) {
-          controls.prepend(toggleBtn);
+        if (controlsWrap.parentElement !== controls || controls.firstChild !== controlsWrap) {
+          controls.prepend(controlsWrap);
         }
       }
     } else {
-      if (toggleBtn.parentElement !== controls || controls.firstChild !== toggleBtn) {
-        controls.prepend(toggleBtn);
+      if (controlsWrap.parentElement !== controls || controls.firstChild !== controlsWrap) {
+        controls.prepend(controlsWrap);
       }
     }
   } else {
     toggleBtn.classList.remove('ytwReelActionBarViewModelHostDesktopActionButton');
-    if (toggleBtn.parentElement !== controls) {
-      controls.prepend(toggleBtn);
+    if (controlsWrap.parentElement !== controls) {
+      controls.prepend(controlsWrap);
     }
   }
 
-  toggleBtn.style.display = '';
+  controlsWrap.style.display = 'inline-flex';
 }
 
 function scheduleEnsureToggleBtn() {
@@ -648,7 +788,7 @@ playerControlsObserver.observe(document.documentElement, {
 
 function updateToggleBtn() {
   if (!isYouTubeVideoPage()) {
-    if (toggleBtn) toggleBtn.style.display = 'none';
+    if (controlsWrap) controlsWrap.style.display = 'none';
     return;
   }
   if (!toggleBtn) {
@@ -684,6 +824,8 @@ function updateToggleBtn() {
     icon.textContent = '👁';
     toggleBtn.dataset.tooltip = 'زیرنویس فعال — کلیک برای پنهان کردن';
   }
+
+  updateProgressAndDownload();
 }
 
 async function reloadSubtitles() {
@@ -751,16 +893,29 @@ function applyStyles() {
   }
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function showCue(cue) {
   if (!isYouTubeVideoPage()) return;
   if (!ensureBar()) return;
   attachBar();
 
-  if (faEl.textContent !== (cue.fa || '…')) {
+  const faRaw = cue.fa || '…';
+  const formattedHtml = escapeHtml(faRaw).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  if (faEl.innerHTML !== formattedHtml) {
     faEl.classList.remove('ytfa-manual-reveal');
+    faEl.innerHTML = formattedHtml;
   }
 
-  faEl.textContent = cue.fa || '…';
   renderClickableOriginalText(cue.text || '', cue.phrases);
   if (subtitleVisible) bar.classList.add('ytfa-visible');
 }
@@ -943,7 +1098,7 @@ async function translateAll() {
         break;
       }
 
-      const resp = await chrome.runtime.sendMessage({ type: 'TRANSLATE', texts });
+      const resp = await chrome.runtime.sendMessage({ type: 'TRANSLATE', texts, videoMeta: state.videoMeta });
 
       if (!settings.enabled || currentSessionId !== state.translationSessionId || document.hidden) {
         stopTranslation();
@@ -966,6 +1121,7 @@ async function translateAll() {
           if (state.currentIndex >= startIdx && state.currentIndex <= endIdx) {
             showCue(state.cues[state.currentIndex]);
           }
+          updateProgressAndDownload();
         }
       } else if (resp?.error === 'APP_DISABLED' || resp?.error === 'TAB_INACTIVE') {
         // اگر افزونه خاموش باشد یا تب غیرفعال باشد، حلقه ترجمه فوراً متوقف می‌شود
@@ -1142,8 +1298,9 @@ async function boot({ silent = false } = {}) {
 
   let success = false;
   try {
-    const { videoId, url, tracks } = await requestCaptions();
+    const { videoId, url, tracks, videoMeta } = await requestCaptions();
     if (!settings.enabled || generation !== bootGeneration) return;
+    state.videoMeta = videoMeta || null;
     if (getVideoIdFromUrl() !== expectedVideoId ||
         (expectedVideoId && videoId !== expectedVideoId)) {
       console.warn('[ytfa] ignored stale caption response:', videoId, expectedVideoId);
@@ -1163,6 +1320,11 @@ async function boot({ silent = false } = {}) {
     state.cues = [];
     state.currentIndex = -1;
     state.activeVideo = getVideo();
+
+    // Log new video detection with metadata
+    const vTitle = state.videoMeta?.title || 'N/A';
+    const vCategory = state.videoMeta?.category || 'N/A';
+    console.log(`[ytfa] 🎬 New video loaded: "${vTitle.slice(0, 80)}" | YouTube Category: ${vCategory} | ID: ${videoId}`);
 
     if (!tracks || !tracks.length) {
       if (!silent) {
@@ -1247,6 +1409,7 @@ function onNavigate() {
     state.loading = false;
     stopTranslation();
     state.videoId = null;
+    state.videoMeta = null;
     state.cues = [];
     state.currentIndex = -1;
     state.activeVideo = null;

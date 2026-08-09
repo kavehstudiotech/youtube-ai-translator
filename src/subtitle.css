@@ -280,6 +280,132 @@
   opacity: 1;
 }
 
+/* ─── Controls Wrap & Progress / Download Buttons ────────────── */
+
+#ytfa-controls-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  vertical-align: middle;
+  margin: 0 6px;
+  pointer-events: auto;
+}
+
+#ytfa-controls-wrap.ytfa-shorts-wrap {
+  flex-direction: column;
+  height: auto;
+  margin: 0 0 12px 0;
+}
+
+#ytfa-progress-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(0, 245, 212, 0.12);
+  border: 1px solid rgba(0, 245, 212, 0.4);
+  color: #00f5d4;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  user-select: none;
+  cursor: default;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+#ytfa-progress-badge.completed {
+  background: rgba(46, 204, 113, 0.2);
+  border-color: rgba(46, 204, 113, 0.6);
+  color: #2ecc71;
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);
+}
+
+.ytfa-dl-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #e2e8f0;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.ytfa-dl-btn:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: #00f5d4;
+  color: #00f5d4;
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(0, 245, 212, 0.35);
+}
+
+.ytfa-dl-btn:active {
+  transform: scale(0.95);
+}
+
+.ytfa-dl-btn.ytfa-dl-fa {
+  background: rgba(0, 245, 212, 0.14);
+  border-color: rgba(0, 245, 212, 0.4);
+  color: #00f5d4;
+}
+
+.ytfa-dl-btn.ytfa-dl-fa:hover {
+  background: rgba(0, 245, 212, 0.28);
+  box-shadow: 0 0 14px rgba(0, 245, 212, 0.5);
+}
+
+.ytfa-dl-btn.ytfa-dl-fa.completed {
+  background: rgba(46, 204, 113, 0.2);
+  border-color: rgba(46, 204, 113, 0.6);
+  color: #2ecc71;
+}
+
+/* Tooltip for progress badge and download buttons */
+#ytfa-progress-badge::after,
+.ytfa-dl-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e2e8f0;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 6px;
+  direction: rtl;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+#ytfa-progress-badge:hover::after,
+.ytfa-dl-btn:hover::after {
+  opacity: 1;
+}
+
 /* ─── استایل دقیق شورتس بر اساس reel-action-bar-view-model ─── */
 
 #ytfa-toggle-btn.ytfa-shorts-btn {

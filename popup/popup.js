@@ -19,6 +19,7 @@ const DEFAULTS = {
   customApiKey: '',
   customModel: '',
   rpm: 15,
+  translationDomain: 'auto',
   modelRpms: {
     'anthropic/claude-3.5-sonnet': 15,
     'openai/gpt-4o': 15,
@@ -84,6 +85,7 @@ const FIELDS = {
   customApiKey: 'value',
   customModel: 'value',
   rpm: 'int',
+  translationDomain: 'value',
   showOriginal: 'checked',
   showPersian: 'checked',
   origFirst: 'checked',
@@ -234,10 +236,14 @@ function toggleProviderSections(provider) {
   const sec = $('section-' + provider);
   if (sec) sec.hidden = false;
 
-  // پنهان کردن فیلد RPM در صورت انتخاب گوگل ترنسلیت
+  // پنهان کردن فیلد RPM و موضوع ترجمه در صورت انتخاب گوگل ترنسلیت
   const rpmField = $('rpm').closest('.field');
   if (rpmField) {
     rpmField.style.display = provider === 'google_free' ? 'none' : '';
+  }
+  const domainField = $('translationDomainField');
+  if (domainField) {
+    domainField.style.display = provider === 'google_free' ? 'none' : '';
   }
 }
 
@@ -841,6 +847,12 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function formatMarkdown(str) {
+  if (!str) return '';
+  const escaped = escapeHtml(str);
+  return escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+}
+
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -902,7 +914,8 @@ function renderSavedWords() {
         <label class="word-fa-label">
           <span>معنی کلمه:</span>
           <div class="word-fa-input-wrap">
-            <input type="text" class="input-word-fa" data-id="${item.id}" value="${escapeHtml(item.wordFa || '')}" placeholder="معنی فارسی این کلمه را وارد کنید…" dir="rtl" />
+            <div class="word-fa-display" data-id="${item.id}" dir="rtl" title="برای ویرایش کلیک کنید">${formatMarkdown(item.wordFa) || '<span class="placeholder-text">معنی فارسی این کلمه را وارد کنید…</span>'}</div>
+            <input type="text" class="input-word-fa" data-id="${item.id}" value="${escapeHtml(item.wordFa || '')}" placeholder="معنی فارسی این کلمه را وارد کنید…" dir="rtl" style="display: none;" />
             <button type="button" class="btn-ai-translate" data-id="${item.id}" title="ترجمه هوشمند معنی کلمه با AI / گوگل">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
             </button>
@@ -913,7 +926,7 @@ function renderSavedWords() {
 
       <div class="sentence-context-box">
         <div class="saved-en-context" dir="ltr">${highlightWordInSentence(item.en, item.word)}</div>
-        <div class="saved-fa-context" dir="rtl">${escapeHtml(item.fa || '—')}</div>
+        <div class="saved-fa-context" dir="rtl">${formatMarkdown(item.fa || '—')}</div>
       </div>
 
       <div class="saved-meta">
@@ -946,6 +959,7 @@ function renderSavedWords() {
       if (!wordItem) return;
 
       const input = container.querySelector(`.input-word-fa[data-id="${id}"]`);
+      const display = container.querySelector(`.word-fa-display[data-id="${id}"]`);
       const statusEl = document.getElementById(`status-${id}`);
 
       btn.classList.add('loading');
@@ -960,6 +974,7 @@ function renderSavedWords() {
 
         if (response && response.ok && response.translation) {
           if (input) input.value = response.translation;
+          if (display) display.innerHTML = formatMarkdown(response.translation) || '<span class="placeholder-text">معنی فارسی این کلمه را وارد کنید…</span>';
           wordItem.wordFa = response.translation;
           await chrome.storage.local.set({ savedWords: allSavedWords });
           if (statusEl) statusEl.textContent = '✓ ذخیره شد';
@@ -976,6 +991,31 @@ function renderSavedWords() {
             statusEl.textContent = '';
           }
         }, 1500);
+      }
+    });
+  });
+
+  container.querySelectorAll('.word-fa-display').forEach((display) => {
+    const id = display.dataset.id;
+    const input = container.querySelector(`.input-word-fa[data-id="${id}"]`);
+    if (!input) return;
+
+    display.addEventListener('click', () => {
+      display.style.display = 'none';
+      input.style.display = 'block';
+      input.focus();
+    });
+
+    input.addEventListener('blur', () => {
+      const val = input.value.trim();
+      display.innerHTML = formatMarkdown(val) || '<span class="placeholder-text">معنی فارسی این کلمه را وارد کنید…</span>';
+      input.style.display = 'none';
+      display.style.display = 'block';
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        input.blur();
       }
     });
   });

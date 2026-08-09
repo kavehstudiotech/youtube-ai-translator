@@ -135,7 +135,15 @@
     const videoId = resp?.videoDetails?.videoId || null;
     const respTracks =
       resp?.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
-    return { player, videoId, respTracks };
+
+    // Extract video metadata for domain-specific translation prompts
+    const title = resp?.videoDetails?.title || '';
+    const keywords = resp?.videoDetails?.keywords || [];
+    const category = resp?.microformat?.playerMicroformatRenderer?.category || '';
+    const rawDesc = resp?.videoDetails?.shortDescription || '';
+    const shortDescription = rawDesc.slice(0, 200);
+
+    return { player, videoId, respTracks, videoMeta: { title, category, keywords, shortDescription } };
   }
 
   function pickTrack(list) {
@@ -202,10 +210,10 @@
     const data = event.data;
     if (!data || data.channel !== REQ || data.type !== 'GET_CAPTIONS') return;
 
-    const { player, videoId, respTracks } = getContext();
+    const { player, videoId, respTracks, videoMeta } = getContext();
     if (!player || !respTracks.length) {
       window.postMessage(
-        { channel: RES, reqId: data.reqId, videoId, url: null, tracks: [] },
+        { channel: RES, reqId: data.reqId, videoId, url: null, tracks: [], videoMeta },
         '*'
       );
       return;
@@ -219,6 +227,7 @@
         videoId,
         url,
         lang: track?.languageCode || null,
+        videoMeta,
         tracks: respTracks.map((t) => ({
           lang: t.languageCode,
           kind: t.kind || 'manual',

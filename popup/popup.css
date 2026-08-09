@@ -1029,6 +1029,7 @@ output {
   gap: 8px;
   font-size: 11px;
   color: var(--muted);
+  width: 100%;
 }
 
 .word-fa-label span {
@@ -1038,13 +1039,53 @@ output {
 .word-fa-input-wrap {
   position: relative;
   flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
 }
 
 .word-fa-input-wrap .input-word-fa {
   width: 100%;
-  padding-left: 30px !important;
+  min-width: 0;
+  box-sizing: border-box;
+  padding-left: 32px !important;
+  padding-right: 10px !important;
+}
+
+.word-fa-display {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 10px 0 32px;
+  height: 36px;
+  line-height: 34px;
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-input);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.word-fa-display:hover {
+  border-color: rgba(0, 245, 212, 0.35);
+}
+
+.word-fa-display strong,
+.saved-fa-context strong {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.word-fa-display .placeholder-text {
+  color: var(--muted);
+  opacity: 0.6;
 }
 
 .btn-ai-translate {
