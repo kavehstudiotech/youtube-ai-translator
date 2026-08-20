@@ -30,7 +30,10 @@ yarn-error.log*
 
 # --- فایل‌های محلی و امنیتی (جلوگیری از آپلود اشتباه کلیدهای API شخصی) ---
 .env
-.env.local
+.env.*
+config.js
+src/config.js
 config.private.js
+src/config.private.js
 
 otherassets/

@@ -6,6 +6,8 @@
  *   2. Cache translations (per video) so re-watching / seeking is instant.
  */
 
+import { CLOUD_CACHE_URL } from './config.js';
+
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const DEFAULT_MODEL = 'deepseek/deepseek-chat';
 
@@ -82,11 +84,102 @@ const DEFAULTS = {
     'gpt-4o': 30,
     'llama3': 15,
   },
+  cloudCacheEnabled: true,
+  cloudCacheShare: true,
 };
 
 async function getConfig() {
   const stored = await chrome.storage.sync.get(DEFAULTS);
   return { ...DEFAULTS, ...stored };
+}
+
+/* ─────────── Cloudflare Worker Subtitle Cloud Cache ─────────── */
+
+async function fetchCloudCache(videoId, cfg) {
+  if (!cfg.cloudCacheEnabled || !videoId || !CLOUD_CACHE_URL) return null;
+  const baseUrl = CLOUD_CACHE_URL.replace(/\/+$/, '');
+  try {
+    const res = await fetchWithTimeout(
+      `${baseUrl}/subs?videoId=${encodeURIComponent(videoId)}&lang=fa&_t=${Date.now()}`,
+      {
+        method: 'GET',
+        cache: 'no-store'
+      },
+      6000
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && data.ok && data.found && Array.isArray(data.cues) && data.cues.length > 0) {
+      console.log(`[ytfa] ⚡ Found cloud cached subtitles for ${videoId} (${data.cues.length} cues, ${data.models?.length || 1} models)`);
+      return data;
+    }
+  } catch (err) {
+    console.warn('[ytfa] Cloud cache fetch unavailable:', err.message || err);
+  }
+  return null;
+}
+
+function getModelMeta(cfg) {
+  const provider = cfg?.provider || 'google_free';
+  if (provider === 'google_free') {
+    return { provider: 'google_free', modelId: 'google_free', modelName: 'Google Translate' };
+  }
+  if (provider === 'gemini') {
+    return { provider: 'gemini', modelId: cfg.geminiModel || 'gemini-3.1-flash-lite', modelName: `Gemini (${cfg.geminiModel || 'Flash'})` };
+  }
+  if (provider === 'deepseek') {
+    return { provider: 'deepseek', modelId: cfg.deepseekModel || 'deepseek-v4-flash', modelName: `DeepSeek (${cfg.deepseekModel || 'Flash'})` };
+  }
+  if (provider === 'openai') {
+    return { provider: 'openai', modelId: cfg.openaiModel || 'gpt-5.6-luna', modelName: `OpenAI (${cfg.openaiModel || 'GPT'})` };
+  }
+  if (provider === 'grok') {
+    return { provider: 'grok', modelId: cfg.grokModel || 'openai/gpt-oss-120b', modelName: `xAI Grok (${cfg.grokModel || 'Grok'})` };
+  }
+  if (provider === 'openrouter') {
+    const raw = cfg.model || 'openrouter';
+    const clean = raw.split('/').pop().replace(/-/g, ' ');
+    return { provider: 'openrouter', modelId: raw, modelName: `OpenRouter (${clean})` };
+  }
+  if (provider === 'local') {
+    return { provider: 'local', modelId: cfg.localModel || 'local', modelName: `Local AI (${cfg.localModel || 'Ollama'})` };
+  }
+  return { provider: 'custom', modelId: cfg.customModel || 'custom', modelName: `Custom AI (${cfg.customModel || 'LLM'})` };
+}
+
+async function uploadCloudCache(videoId, cues, title, cfg) {
+  if (!cfg.cloudCacheEnabled || !cfg.cloudCacheShare || !videoId || !Array.isArray(cues) || cues.length === 0 || !CLOUD_CACHE_URL) {
+    return { ok: false, reason: 'disabled_or_empty' };
+  }
+  const baseUrl = CLOUD_CACHE_URL.replace(/\/+$/, '');
+  const modelMeta = getModelMeta(cfg);
+  try {
+    const res = await fetchWithTimeout(
+      `${baseUrl}/subs`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          videoId,
+          lang: 'fa',
+          cues,
+          title: title || '',
+          provider: modelMeta.provider,
+          modelId: modelMeta.modelId,
+          modelName: modelMeta.modelName,
+        }),
+      },
+      8000
+    );
+    if (res.ok) {
+      const respData = await res.json();
+      console.log(`[ytfa] ☁️ Uploaded ${cues.length} cues for model "${modelMeta.modelName}" to cloud cache for video ${videoId}`);
+      return respData;
+    }
+  } catch (err) {
+    console.warn('[ytfa] Cloud cache upload failed:', err.message || err);
+  }
+  return { ok: false };
 }
 
 /* ─────────── Video Domain Detection & Specialized Prompts ─────────── */
@@ -631,7 +724,8 @@ async function llmChat({ system, user, cfg, isJson = false, timeoutMs = 15000 })
 
 /** Google AI Studio (Gemini) API Chat */
 async function geminiChat({ apiKey, model, system, user, isJson = false, timeoutMs = 15000 }) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const cleanModel = (model || 'gemini-2.5-flash').trim();
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${apiKey}`;
   const generationConfig = { temperature: 0.2 };
   if (isJson) generationConfig.responseMimeType = 'application/json';
 
@@ -652,6 +746,43 @@ async function geminiChat({ apiKey, model, system, user, isJson = false, timeout
   }
 
   if (!res.ok) {
+    let errBody = '';
+    try { errBody = await res.text(); } catch {}
+    console.warn(`[ytfa] Gemini API error (status ${res.status}, model "${cleanModel}"):`, errBody);
+
+    // Detect geo-restriction (Iran, etc.)
+    if ((res.status === 400 || res.status === 403) && (
+      errBody.includes('User location is not supported') ||
+      errBody.includes('FAILED_PRECONDITION') ||
+      errBody.includes('location') ||
+      errBody.includes('country') ||
+      errBody.includes('region')
+    )) {
+      console.error('[ytfa] ⛔ Gemini API geo-restricted. User location is not supported.');
+      throw new Error('ERR_GEO');
+    }
+
+    // Auto-fallback if model or API version dislikes native JSON mode or systemInstruction
+    if (res.status === 400) {
+      console.warn(`[ytfa] Gemini returned 400. Retrying with merged prompt...`);
+      try {
+        const fallbackRes = await fetchWithTimeout(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: `${system}\n\n${user}` }] }],
+            generationConfig: { temperature: 0.2 }
+          })
+        }, timeoutMs);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          return fallbackData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        }
+      } catch (e) {
+        console.warn('[ytfa] Gemini fallback retry failed:', e);
+      }
+    }
+
     if (res.status === 429) throw new Error('ERR_429');
     if (res.status === 401 || res.status === 403) throw new Error('ERR_AUTH');
     if (res.status >= 500) throw new Error('ERR_SERVER');
@@ -687,6 +818,22 @@ async function openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJs
 
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
+    console.warn(`[ytfa] OpenAI compatible API error (status ${res.status}):`, txt);
+
+    // Detect geo-restriction (OpenAI / Groq 403 or 400)
+    if ((res.status === 400 || res.status === 403) && (
+      txt.includes('unsupported_country') ||
+      txt.includes('country') ||
+      txt.includes('region') ||
+      txt.includes('territory') ||
+      txt.includes('location') ||
+      txt.includes('Access denied') ||
+      txt.includes('Cloudflare')
+    )) {
+      console.error('[ytfa] ⛔ API provider geo-restricted / blocked by IP:', txt);
+      throw new Error('ERR_GEO');
+    }
+
     if (res.status === 400 && isJson && (txt.includes('json_object') || txt.includes('response_format') || txt.includes('INVALID_REQUEST_BODY'))) {
       console.warn(`[ytfa] Provider/Model does not support native JSON mode. Retrying without response_format...`);
       return openaiCompatibleChat({ baseUrl, apiKey, model, system, user, isJson: false, timeoutMs });
@@ -729,6 +876,21 @@ async function openrouterChat({ apiKey, model, system, user, isJson = false, tim
 
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
+    console.warn(`[ytfa] OpenRouter API error (status ${res.status}):`, txt);
+
+    // Detect geo-restriction (OpenRouter 403 or 400)
+    if ((res.status === 400 || res.status === 403) && (
+      txt.includes('unsupported_country') ||
+      txt.includes('country') ||
+      txt.includes('region') ||
+      txt.includes('territory') ||
+      txt.includes('location') ||
+      txt.includes('geoblocked')
+    )) {
+      console.error('[ytfa] ⛔ OpenRouter geo-restricted / blocked by IP:', txt);
+      throw new Error('ERR_GEO');
+    }
+
     if (res.status === 400 && isJson && (txt.includes('json_object') || txt.includes('response_format') || txt.includes('INVALID_REQUEST_BODY'))) {
       console.warn(`[ytfa] Model ${model} does not support native JSON mode. Retrying without response_format...`);
       return openrouterChat({ apiKey, model, system, user, isJson: false, timeoutMs });
@@ -744,47 +906,69 @@ async function openrouterChat({ apiKey, model, system, user, isJson = false, tim
 }
 
 async function translateWordDictionary(word, sentence, cfg) {
-  if (!word) return '';
+  if (!word) return { translation: '', ipa: '', formality: '', tutorNote: '', synonyms: [] };
 
   if (cfg.provider === 'google_free') {
     return await translateWordGoogleFree(word, sentence);
   }
 
   const system =
-    'You are a professional English-to-Persian (فارسی) dictionary assistant for language learners.\n' +
-    'You will be given an English word and the full sentence context where it appears.\n' +
-    'Your task is to:\n' +
-    '1. Identify the EXACT Persian meaning of the word in the context of the sentence, and write it FIRST wrapped in bold markdown (**مفهوم در جمله**).\n' +
-    '2. Provide 2 to 4 other common Persian synonyms or meanings of the word inside parentheses (...).\n' +
-    '3. Do NOT include any explanations, English text, introduction, or notes. Output ONLY the Persian result.\n' +
-    'Example output format:\n' +
-    '**می‌نویسد** (نوشتن، نگاشتن، ثبت کردن)';
+    'You are an expert English language tutor helping a learner understand English vocabulary and nuances in context.\n' +
+    'Analyze the given English word in the context of the sentence.\n' +
+    'Output a valid JSON object ONLY (strictly matching this JSON schema):\n' +
+    '{\n' +
+    '  "translation": "دقیق‌ترین معنی یا مفهوم کلمه در این جمله (به فارسی روان و طبیعی)",\n' +
+    '  "ipa": "IPA phonetic pronunciation e.g. /ˌkɒnvəˈseɪʃn/",\n' +
+    '  "formality": "One of: اصطلاح | عامیانه | محاوره‌ای | رسمی (or empty string if general/standard)",\n' +
+    '  "synonyms": ["مترادف فارسی ۱", "مترادف فارسی ۲"],\n' +
+    '  "tutorNote": "نکته آموزشی انگلیسی (کوتاه در ۱ جمله فارسی): مثلاً کالوکیشن‌های رایج انگلیسی با این کلمه، حروف اضافه همراه آن در انگلیسی، یا تفاوت کاربرد آن با کلمات مشابه در انگلیسی. هرگز به کاربر یاد ندهید که در زبان فارسی چه بگوید یا چه نگوید!"\n' +
+    '}';
 
   const user = `Word: "${word}"\nSentence context: "${sentence || ''}"`;
 
-  const response = await llmChat({
-    system,
-    user,
-    cfg,
-    isJson: false,
-    timeoutMs: 8000
-  });
+  try {
+    const response = await llmChat({
+      system,
+      user,
+      cfg,
+      isJson: true,
+      timeoutMs: 9000
+    });
 
-  let cleaned = response.trim();
-  cleaned = cleaned.replace(/^```[a-zA-Z]*\s*/i, '').replace(/```\s*$/i, '').trim();
-  return cleaned;
+    let cleaned = response.trim();
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+    const parsed = JSON.parse(cleaned);
+
+    const formalityRaw = (parsed.formality || '').trim();
+    const formality = ['اصطلاح', 'عامیانه', 'محاوره‌ای', 'رسمی'].includes(formalityRaw) ? formalityRaw : '';
+
+    return {
+      translation: parsed.translation || '',
+      ipa: (parsed.ipa || '').replace(/^\/+|\/+$/g, ''),
+      formality: formality,
+      synonyms: Array.isArray(parsed.synonyms) ? parsed.synonyms : [],
+      tutorNote: parsed.tutorNote || '',
+    };
+  } catch (err) {
+    console.warn('[ytfa] AI tutor parse failed, falling back to Google free dict:', err);
+    return await translateWordGoogleFree(word, sentence);
+  }
 }
 
 async function translateWordGoogleFree(word, sentence) {
-  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fa&dt=t&dt=bd&q=${encodeURIComponent(word)}`;
+  const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=fa&dt=t&dt=bd&dt=rm&q=${encodeURIComponent(word)}`;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error('ERR_SERVER');
     const data = await res.json();
     
     let mainTrans = '';
+    let ipa = '';
     if (data && data[0] && data[0][0] && data[0][0][0]) {
       mainTrans = data[0][0][0].trim();
+    }
+    if (data && data[0] && data[0][1] && data[0][1][3]) {
+      ipa = data[0][1][3];
     }
 
     const synonyms = [];
@@ -801,15 +985,24 @@ async function translateWordGoogleFree(word, sentence) {
     }
 
     const topSynonyms = synonyms.slice(0, 4);
-    if (mainTrans && topSynonyms.length) {
-      return `**${mainTrans}** (${topSynonyms.join('، ')})`;
-    } else if (mainTrans) {
-      return `**${mainTrans}**`;
-    }
-    return word;
+
+    return {
+      translation: mainTrans || word,
+      ipa: ipa,
+      formality: '',
+      synonyms: topSynonyms,
+      tutorNote: '',
+    };
   } catch (e) {
     console.error('[ytfa] Google word dictionary fetch failed:', e);
-    return await translateOneGoogleFree(word);
+    const fallbackText = await translateOneGoogleFree(word).catch(() => word);
+    return {
+      translation: fallbackText || word,
+      ipa: '',
+      formality: '',
+      synonyms: [],
+      tutorNote: '',
+    };
   }
 }
 
@@ -850,6 +1043,32 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const cfg = await getConfig();
         const result = await translateWordDictionary(msg.word, msg.sentence, cfg);
         sendResponse({ ok: true, translation: result });
+      } catch (e) {
+        sendResponse({ ok: false, error: String(e.message || e) });
+      }
+    })();
+    return true;
+  }
+
+  if (msg?.type === 'GET_CLOUD_CACHE') {
+    (async () => {
+      try {
+        const cfg = await getConfig();
+        const result = await fetchCloudCache(msg.videoId, cfg);
+        sendResponse({ ok: true, data: result });
+      } catch (e) {
+        sendResponse({ ok: false, error: String(e.message || e) });
+      }
+    })();
+    return true;
+  }
+
+  if (msg?.type === 'SAVE_CLOUD_CACHE') {
+    (async () => {
+      try {
+        const cfg = await getConfig();
+        const result = await uploadCloudCache(msg.videoId, msg.cues, msg.title, cfg);
+        sendResponse({ ok: true, data: result });
       } catch (e) {
         sendResponse({ ok: false, error: String(e.message || e) });
       }

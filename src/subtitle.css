@@ -155,25 +155,27 @@
   display: none !important;
 }
 
-/* Toast notification (missing key, no captions, …) */
+/* Toast notification (missing key, no captions, update alert, …) */
 #ytfa-toast {
   position: fixed;
   top: 72px;
   right: 24px;
-  z-index: 99999;
-  max-width: 320px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  background: #1f1f1f;
-  color: #fff;
+  z-index: 999999 !important;
+  max-width: 340px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  color: #f8fafc;
   font-family: 'Vazirmatn', Tahoma, sans-serif;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.5;
   direction: rtl;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  border: 1px solid #c8102e;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(0, 245, 212, 0.2);
+  border: 1px solid rgba(0, 245, 212, 0.4);
   opacity: 0;
   transform: translateY(-8px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s ease, transform 0.25s ease;
   pointer-events: none;
 }
 
@@ -378,6 +380,32 @@
   color: #2ecc71;
 }
 
+.ytfa-dl-btn.ytfa-retrans-btn {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(245, 158, 11, 0.18));
+  border-color: rgba(251, 191, 36, 0.5);
+  color: #fbbf24;
+  animation: ytfaGlowPulse 2s infinite ease-in-out;
+}
+
+.ytfa-dl-btn.ytfa-retrans-btn:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.35), rgba(245, 158, 11, 0.35));
+  border-color: #fbbf24;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+  color: #fef08a;
+  transform: translateY(-1px);
+}
+
+@keyframes ytfaGlowPulse {
+  0%, 100% {
+    border-color: rgba(251, 191, 36, 0.5);
+    box-shadow: 0 0 0 rgba(251, 191, 36, 0);
+  }
+  50% {
+    border-color: rgba(251, 191, 36, 0.9);
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.35);
+  }
+}
+
 /* Tooltip for progress badge and download buttons */
 #ytfa-progress-badge::after,
 .ytfa-dl-btn::after {
@@ -458,4 +486,464 @@
 html[dir="rtl"] #ytfa-toggle-btn.ytfa-shorts-btn::after {
   right: auto !important;
   left: calc(100% + 12px) !important;
+}
+
+/* ─── Cloud Cache Notification Banner ─────────────────────── */
+#ytfa-cache-banner {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(0, 245, 212, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 245, 212, 0.2);
+  backdrop-filter: blur(12px);
+  padding: 8px 14px;
+  border-radius: 10px;
+  color: #f1f5f9;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  font-size: 12px;
+  direction: rtl;
+  animation: ytfaFadeInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto;
+}
+
+@keyframes ytfaFadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Multi-Model Cloud Cache Switcher Button ─────────────────── */
+.ytfa-model-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(0, 245, 212, 0.4);
+  color: #00f5d4;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 245, 212, 0.15);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 140px;
+}
+
+.ytfa-model-btn:hover {
+  background: rgba(0, 245, 212, 0.18);
+  border-color: #00f5d4;
+  box-shadow: 0 4px 14px rgba(0, 245, 212, 0.3);
+  transform: translateY(-1px);
+}
+
+.ytfa-model-btn .ytfa-model-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+}
+
+.ytfa-model-btn .ytfa-model-arrow {
+  font-size: 10px;
+  opacity: 0.8;
+  margin-right: 2px;
+}
+
+/* ─── Multi-Model Floating Dropdown ─────────────────────────── */
+#ytfa-model-dropdown {
+  position: absolute;
+  z-index: 99999 !important;
+  width: 250px;
+  background: rgba(11, 15, 23, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(0, 245, 212, 0.15);
+  backdrop-filter: blur(20px);
+  color: #f1f5f9;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  direction: rtl;
+  padding: 8px;
+  animation: ytfaDropPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  pointer-events: auto !important;
+}
+
+@keyframes ytfaDropPop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ytfa-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.ytfa-dropdown-badge {
+  background: rgba(0, 245, 212, 0.12);
+  color: #00f5d4;
+  border: 1px solid rgba(0, 245, 212, 0.3);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+}
+
+.ytfa-dropdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 6px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ytfa-model-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  color: #e2e8f0;
+  text-align: right;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.ytfa-model-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.ytfa-model-item.active {
+  background: rgba(0, 245, 212, 0.12);
+  border-color: rgba(0, 245, 212, 0.35);
+  color: #00f5d4;
+}
+
+.ytfa-model-item-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.ytfa-model-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ytfa-model-item-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ytfa-model-item-sub {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-top: 1px;
+}
+
+.ytfa-model-check {
+  font-size: 13px;
+  color: #00f5d4;
+  font-weight: 800;
+}
+
+.ytfa-dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+.ytfa-model-retrans-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  color: #fbbf24;
+  text-align: right;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.ytfa-model-retrans-action:hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #fbbf24;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+}
+
+/* ─── AI Tutor Interactive Popover Modal ───────────────────── */
+#ytfa-tutor-modal {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  transform: translate(-50%, -50%);
+  z-index: 99999 !important;
+  width: 320px;
+  max-width: 90vw;
+  background: rgba(11, 15, 23, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(0, 245, 212, 0.2);
+  backdrop-filter: blur(20px);
+  color: #f1f5f9;
+  font-family: 'Vazirmatn', Tahoma, sans-serif;
+  direction: rtl;
+  padding: 14px;
+  animation: ytfaTutorPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: auto !important;
+  user-select: none;
+}
+
+.ytfa-tutor-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.ytfa-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0, 245, 212, 0.2);
+  border-top-color: #00f5d4;
+  border-radius: 50%;
+  animation: ytfaSpin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes ytfaSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ytfaTutorPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.ytfa-tutor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ytfa-tutor-word-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ytfa-tutor-word {
+  font-size: 16px;
+  font-weight: 800;
+  color: #00f5d4;
+  direction: ltr;
+}
+
+.ytfa-tutor-ipa {
+  font-size: 12px;
+  color: #94a3b8;
+  direction: ltr;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.ytfa-tutor-audio-btn {
+  background: rgba(0, 245, 212, 0.12);
+  border: 1px solid rgba(0, 245, 212, 0.3);
+  color: #00f5d4;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.ytfa-tutor-audio-btn:hover {
+  background: #00f5d4;
+  color: #000;
+  transform: scale(1.08);
+}
+
+.ytfa-tutor-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.ytfa-tutor-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ytfa-tutor-star-btn {
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  padding: 0;
+}
+
+.ytfa-tutor-star-btn:hover {
+  background: rgba(251, 191, 36, 0.25);
+  border-color: #fbbf24;
+  transform: scale(1.12);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
+
+.ytfa-tutor-star-btn.is-saved {
+  background: rgba(251, 191, 36, 0.2);
+  border-color: #fbbf24;
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.35);
+}
+
+.ytfa-tutor-star-btn.ytfa-star-pop {
+  animation: ytfaStarPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes ytfaStarPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.45) rotate(15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.ytfa-tutor-close {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.ytfa-tutor-close:hover {
+  color: #f1f5f9;
+}
+
+.ytfa-tutor-body {
+  padding: 8px 0 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ytfa-tutor-trans-main {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.5;
+}
+
+.ytfa-tutor-synonyms {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.ytfa-tutor-note-box {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #fde68a;
+}
+
+.ytfa-tutor-note-title {
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ytfa-tutor-context-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ytfa-tutor-en-sent {
+  direction: ltr;
+  color: #cbd5e1;
+}
+
+.ytfa-tutor-fa-sent {
+  color: #94a3b8;
 }

@@ -19,6 +19,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="https://dualsub.ir/icon.png">
     <link rel="apple-touch-icon" href="https://dualsub.ir/icon.png">
     <link rel="shortcut icon" href="https://dualsub.ir/favicon.ico">
+    
     <!-- Local Font Stylesheet -->
     <link rel="stylesheet" href="fonts/vazirmatn.css">
 
@@ -74,10 +75,10 @@
             },
             {
               "@type": "Question",
-              "name": "آیا استفاده از این ابزار واقعا رایگان است؟",
+              "name": "آیا استفاده از این ابزار واقعاً رایگان است؟",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "بله! ما با پیاده‌سازی سیستم مدیریت هوشمند کاری کرده‌ایم که بدون نیاز به تنظیمات پیچیده، به صورت رایگان از ترجمه هوشمند استفاده کنید."
+                "text": "ما تمام تلاشمان را کرده‌ایم که امکانات پرکاربرد این افزونه به صورت کاملاً رایگان در دسترس همه باشد تا بدون مانع زبان از یادگیری و تماشای ویدیوها لذت ببرید. با این حال، برای استفاده‌های پیشرفته‌تر و پردازش‌های سنگین با مدل‌های زبانی هوش مصنوعی، امکان اتصال مدل‌های اختصاصی نیز فراهم است."
               }
             },
             {
@@ -96,116 +97,143 @@
     <meta name="google-site-verification" content="v3eJlTY8aT957tjiy7-wByNzVcRVyIetwOzPL7kHMRg" />
 </head>
 
-<body class="font-sans antialiased selection:bg-[#00f2fe] selection:text-black overflow-x-hidden">
+<body class="font-sans antialiased selection:bg-[#00f2fe] selection:text-black">
 
     <!-- Background Ambient Glow & Vercel Grid -->
     <div class="fixed inset-0 bg-grid-pattern pointer-events-none z-0"></div>
-    <div class="ambient-blob-cyan"></div>
-    <div class="ambient-blob-purple"></div>
+    <div class="ambient-blob-cyan pointer-events-none"></div>
+    <div class="ambient-blob-purple pointer-events-none"></div>
+    <div class="ambient-blob-emerald pointer-events-none"></div>
+
     <!-- Header / Floating Glass Navbar -->
     {% include header.html %}
 
     <!-- Hero Section -->
     <section class="relative z-10 max-w-5xl mx-auto px-4 pt-10 sm:pt-16 pb-16 sm:pb-24 text-center">
-        <!-- Top Badge -->
-        <div
-            class="inline-flex items-center justify-center gap-2.5 px-4 py-2 rounded-full glow-border-badge text-white mb-6 sm:mb-8 text-xs sm:text-sm font-bold max-w-full">
-            <i class="fa-solid fa-bolt text-yellow-400 bolt-pulse-icon shrink-0"></i>
-            <span class="truncate sm:whitespace-normal">جدیدترین نسخه با پشتیبانی از هوش مصنوعی منتشر شد</span>
+
+        <!-- Floating Subtitle Particles Scoped Strictly to Hero -->
+        <div class="sub-particles-wrapper pointer-events-none">
+            <div class="sub-particle sub-p-1">
+                <span class="badge-en">"Click word for AI meaning"</span>
+                <i class="fa-solid fa-arrow-left-long badge-arrow"></i>
+                <span class="badge-fa">«کلیک روی کلمه: معنی و تلفظ»</span>
+            </div>
+            <div class="sub-particle sub-p-2">
+                <span class="badge-en">"Bilingual Learning"</span>
+                <i class="fa-solid fa-arrow-left-long badge-arrow"></i>
+                <span class="badge-fa">«یادگیری دوزبانه انگلیسی و فارسی»</span>
+            </div>
+            <div class="sub-particle sub-p-3">
+                <span class="badge-en">"Contextual AI Explanation"</span>
+                <i class="fa-solid fa-arrow-left-long badge-arrow"></i>
+                <span class="badge-fa">«توضیح هوش مصنوعی در متن»</span>
+            </div>
+            <div class="sub-particle sub-p-4">
+                <span class="badge-en">"Real-time Subtitles"</span>
+                <i class="fa-solid fa-arrow-left-long badge-arrow"></i>
+                <span class="badge-fa">«ترجمه همزمان بدون تأخیر»</span>
+            </div>
         </div>
 
         <!-- Headline -->
-        <h1
-            class="text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight sm:leading-tight mb-5 sm:mb-7 px-2 tracking-tight">
-            افزونه مترجم فارسی یوتیوب <br class="hidden sm:inline">
-            <span class="text-ai-gradient mt-2 sm:mt-3">با قدرت هوش مصنوعی</span>
+        <h1 class="reveal-init text-3xl sm:text-5xl md:text-6xl font-black text-white leading-tight sm:leading-tight mb-5 sm:mb-6 px-2 tracking-tight">
+            تماشای ویدیوهای یوتیوب با <br class="hidden sm:inline">
+            <span class="text-ai-gradient mt-2 sm:mt-3">زیرنویس فارسی و دوزبانه هوشمند</span>
         </h1>
 
-        <!-- Subtitle -->
-        <p
-            class="text-sm sm:text-lg md:text-xl text-gray-300/90 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal px-2">
-            بهترین مترجم یوتیوب با هوش مصنوعی برای دیدن ویدیوها با زیرنویس دوزبانه. ایده‌آل برای یادگیری زبان و عبور از
-            موانع زبانی با یک کلیک!
+        <!-- Dynamic Live Subtitle Translation Box (Typewriter) -->
+        <div class="reveal-init stagger-1 flex justify-center mb-6 px-2">
+            <div class="inline-flex items-center gap-2.5 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs sm:text-sm font-medium text-gray-300 shadow-[0_0_20px_rgba(0,242,254,0.1)]">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0"></span>
+                <span class="text-[#00f2fe] font-bold shrink-0">نمونه ترجمه زنده:</span>
+                <span id="typewriter-text" class="text-white font-semibold"></span>
+                <span class="typewriter-cursor"></span>
+            </div>
+        </div>
+
+        <!-- Subtitle Paragraph -->
+        <p class="reveal-init stagger-2 text-sm sm:text-lg md:text-xl text-gray-300/90 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-normal px-2">
+            دیگر هیچ ویدیوی آموزشی، تدتاک یا پادکستی را به خاطر زبان از دست ندهید. نمایش همزمان زیرنویس انگلیسی و ترجمه روان فارسی، با امکان کلیک روی کلمات برای دریافت تلفظ و توضیح هوش مصنوعی در همان لحظه!
         </p>
 
-        <!-- CTA Button -->
-        <div class="flex justify-center px-2">
+        <!-- CTA Button with Glowing Shimmer -->
+        <div class="reveal-init stagger-3 flex flex-col sm:flex-row items-center justify-center gap-4 px-2">
             <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
                 target="_blank" rel="nofollow"
-                class="w-full sm:w-auto inline-flex items-center justify-center gap-3 btn-shimmer px-7 sm:px-9 py-4 sm:py-4.5 rounded-2xl font-extrabold text-base sm:text-lg active:scale-95 border border-white/30">
-                <i class="fa-brands fa-chrome text-xl sm:text-2xl shrink-0"></i>
-                <span>دانلود افزونه برای کروم (رایگان)</span>
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-3 btn-shimmer px-8 sm:px-10 py-4 sm:py-4.5 rounded-2xl font-extrabold text-base sm:text-lg active:scale-95 border border-white/30">
+                <i class="fa-brands fa-chrome text-xl sm:text-2xl shrink-0 text-[#090D16]"></i>
+                <span>دانلود رایگان افزونه برای کروم</span>
             </a>
         </div>
 
-        <!-- Trust Badge Section -->
-        <div
-            class="mt-5 sm:mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs sm:text-sm text-gray-400 font-medium px-2">
-            <span
-                class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
+        <!-- Trust Badges -->
+        <div class="reveal-init stagger-4 mt-6 sm:mt-7 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 text-xs sm:text-sm text-gray-400 font-medium px-2">
+            <span class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full backdrop-blur-md">
                 <i class="fa-solid fa-star text-amber-400 text-xs"></i>
                 <strong class="text-white font-bold">۵/۵</strong> در کروم استور
             </span>
             <span class="hidden xs:inline text-gray-600">•</span>
-            <span
-                class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
+            <span class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full backdrop-blur-md">
                 <i class="fa-solid fa-users text-[#00f2fe] text-xs"></i>
-                بیش از <strong class="text-white font-bold">۱۰۰</strong> کاربر فعال
+                بیش از <strong class="text-white font-bold">۳۰۰+</strong> کاربر فعال
             </span>
             <span class="hidden sm:inline text-gray-600">•</span>
-            <span
-                class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full backdrop-blur-md">
+            <span class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full backdrop-blur-md">
                 <i class="fa-solid fa-bolt text-emerald-400 text-xs"></i>
                 نصب در ۱۰ ثانیه
+            </span>
+            <span class="hidden sm:inline text-gray-600">•</span>
+            <span class="flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+                <i class="fa-solid fa-shield-halved text-[#6157ff] text-xs"></i>
+                ۱۰۰٪ رایگان و امن
             </span>
         </div>
 
         <!-- Hero Product Preview Mockup -->
-        <div class="mt-12 sm:mt-16 hero-mockup-wrapper relative max-w-4xl mx-auto px-2">
+        <div class="reveal-init stagger-4 mt-12 sm:mt-16 hero-mockup-wrapper relative max-w-4xl mx-auto px-2">
 
             <!-- Floating Card 1: Instant AI Translation -->
-            <div
-                class="absolute -top-5 sm:-top-7 -right-2 sm:-right-6 bg-[#0b0f17]/90 backdrop-blur-xl border border-[#00f2fe]/40 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-float-slow z-30">
-                <div
-                    class="w-9 h-9 rounded-xl bg-[#00f2fe]/15 border border-[#00f2fe]/30 flex items-center justify-center text-[#00f2fe] shrink-0">
+            <div class="absolute -top-5 sm:-top-7 -right-2 sm:-right-6 bg-[#0b0f17]/95 backdrop-blur-xl border border-[#00f2fe]/40 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-float-slow z-30">
+                <div class="w-9 h-9 rounded-xl bg-[#00f2fe]/15 border border-[#00f2fe]/30 flex items-center justify-center text-[#00f2fe] shrink-0">
                     <i class="fa-solid fa-bolt text-sm"></i>
                 </div>
                 <div class="text-right">
                     <div class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                        ترجمه آنی با AI
+                        ترجمه آنی با AI ⚡
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                     </div>
-                    <div class="text-[10px] sm:text-xs text-gray-400">بدون فوت وقت و تأخیر</div>
+                    <div class="text-[10px] sm:text-xs text-gray-400">بدون فوت وقت و بدون لگ</div>
                 </div>
             </div>
 
-            <!-- Floating Card 2: 50+ Languages -->
-            <div
-                class="absolute -bottom-5 sm:-bottom-7 -left-2 sm:-left-6 bg-[#0b0f17]/90 backdrop-blur-xl border border-[#6157ff]/40 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-float-delayed z-30">
-                <div
-                    class="w-9 h-9 rounded-xl bg-[#6157ff]/15 border border-[#6157ff]/30 flex items-center justify-center text-[#6157ff] shrink-0">
-                    <i class="fa-solid fa-globe text-sm"></i>
+            <!-- Floating Card 2: Dual Subtitles for English Learning -->
+            <div class="absolute -bottom-5 sm:-bottom-7 -left-2 sm:-left-6 bg-[#0b0f17]/95 backdrop-blur-xl border border-[#6157ff]/40 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-float-delayed z-30">
+                <div class="w-9 h-9 rounded-xl bg-[#6157ff]/15 border border-[#6157ff]/30 flex items-center justify-center text-[#6157ff] shrink-0">
+                    <i class="fa-solid fa-language text-base"></i>
                 </div>
                 <div class="text-right">
-                    <div class="text-xs sm:text-sm font-bold text-white">پشتیبانی از ۵۰+ زبان 🌐</div>
-                    <div class="text-[10px] sm:text-xs text-gray-400">فارسی، انگلیسی، آلمانی...</div>
+                    <div class="text-xs sm:text-sm font-bold text-white">زیرنویس همزمان دوزبانه 🔤</div>
+                    <div class="text-[10px] sm:text-xs text-gray-400">تقویت لیسنینگ و دایره لغات</div>
                 </div>
             </div>
 
             <!-- Main Glass Player Mockup Container -->
             <div class="hero-mockup-card rounded-2xl sm:rounded-3xl overflow-hidden text-right relative">
+                <div class="video-glow-underlay"></div>
 
-                <!-- Mockup Chrome / App Top Navigation Bar -->
-                <div class="bg-[#090D16]/90 px-4 py-3 border-b border-white/10 flex items-center justify-between gap-4">
+                <!-- Mockup Chrome / Browser Header Bar -->
+                <div class="bg-[#090D16]/95 px-4 py-3 border-b border-white/10 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
                         <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
                         <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
                     </div>
-                    <div
-                        class="flex-1 max-w-md mx-auto bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-xs text-gray-400 flex items-center justify-between">
-                        <span class="truncate dir-ltr">youtube.com/watch?v=ai_translator_2026</span>
-                        <i class="fa-solid fa-lock text-[10px] text-emerald-400 ml-1"></i>
+                    <div class="flex-1 max-w-md mx-auto bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-xs text-gray-400 flex items-center justify-between">
+                        <span class="truncate dir-ltr font-mono text-[11px]">youtube.com/watch?v=ted_dual_subtitles</span>
+                        <div class="flex items-center gap-1.5 text-emerald-400">
+                            <span class="text-[10px]">DualSub & AI Dictionary Active</span>
+                            <i class="fa-solid fa-circle-check text-xs"></i>
+                        </div>
                     </div>
                     <div class="flex items-center gap-2 text-red-500 text-sm font-bold">
                         <i class="fa-brands fa-youtube text-lg"></i>
@@ -213,9 +241,9 @@
                     </div>
                 </div>
 
-                <!-- Real YouTube Video Screenshot Container -->
+                <!-- Real YouTube Video Screenshot Container with Word Click Demo -->
                 <div class="relative w-full overflow-hidden">
-                    <img src="hero-demo.png" alt="پیش‌نمایش افزونه مترجم هوشمند یوتیوب با زیرنویس دوزبانه"
+                    <img src="hero-demo.png" alt="پیش‌نمایش افزونه مترجم هوشمند یوتیوب با زیرنویس دوزبانه و دیکشنری هوشمند"
                         class="w-full h-auto object-cover block rounded-b-2xl sm:rounded-b-3xl">
                 </div>
             </div>
@@ -224,184 +252,508 @@
 
     </section>
 
-    <!-- Features Section -->
-    <section id="features"
-        class="relative z-10 py-12 sm:py-20 border-t border-white/10 bg-[#0b0f17]/60 backdrop-blur-md">
+    <!-- SECTION: Before & After Visual Comparison -->
+    <section class="relative z-10 py-12 sm:py-20 border-t border-white/10 bg-[#090D16]">
+        <div class="max-w-5xl mx-auto px-4">
+            
+            <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#00f2fe]/10 border border-[#00f2fe]/30 text-[#00f2fe] text-xs font-bold mb-4">
+                    <i class="fa-solid fa-code-compare"></i>
+                    <span>مقایسه تجربه تماشا</span>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-black text-white leading-tight mb-4">
+                    چرا تماشای یوتیوب با <span class="text-ai-gradient">DualSub</span> یک تجربه متفاوت است؟
+                </h2>
+                <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                    دیگر نیازی به متوقف کردن ویدیو، باز کردن گوگل ترنسلیت و جستجوی کلمات ندارید. همه چیز روی صفحه به صورت زنده اتفاق می‌افتد.
+                </p>
+            </div>
+
+            <!-- Comparison Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-stretch">
+                
+                <!-- Card 1: Without Extension (Negative State) -->
+                <div class="compare-card-bad p-6 sm:p-8 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="inline-flex items-center gap-2 text-red-400 font-bold text-sm bg-red-500/10 border border-red-500/30 px-3 py-1 rounded-full">
+                                <i class="fa-solid fa-xmark"></i>
+                                روش قدیمی (بدون افزونه)
+                            </span>
+                            <span class="text-xs text-gray-500">زیرنویس پیش‌فرض</span>
+                        </div>
+
+                        <!-- Mockup Subtitle Box - Bad -->
+                        <div class="sub-preview-screen p-5 mb-6 text-center border-red-500/20">
+                            <p class="text-xs text-gray-500 font-mono mb-2 dir-ltr">"Where I was basically paid to play games with kids all day..."</p>
+                            <div class="p-3 bg-black/60 rounded-lg border border-white/5">
+                                <p class="text-xs text-gray-400 line-through">ترجمه ماشینی نامفهوم یا بدون زیرنویس فارسی</p>
+                            </div>
+                        </div>
+
+                        <ul class="space-y-3 text-sm text-gray-400">
+                            <li class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-circle-xmark text-red-400 mt-1 shrink-0"></i>
+                                <span>توقف مداوم ویدیو برای چک کردن معنی کلمات در دیکشنری</span>
+                            </li>
+                            <li class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-circle-xmark text-red-400 mt-1 shrink-0"></i>
+                                <span>ترجمه‌های ماشینی بی‌کیفیت که اصطلاحات و اسلنگ‌ها را اشتباه معنی می‌کنند</span>
+                            </li>
+                            <li class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-circle-xmark text-red-400 mt-1 shrink-0"></i>
+                                <span>خستگی چشم، سردرگمی و نصفه رها کردن ویدیوهای آموزشی ارزشمند</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Card 2: With DualSub (Positive AI State) -->
+                <div class="compare-card-good p-6 sm:p-8 rounded-2xl flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-[#00f2fe] via-[#6157ff] to-[#10b981]"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <span class="inline-flex items-center gap-2 text-[#00f2fe] font-bold text-sm bg-[#00f2fe]/10 border border-[#00f2fe]/30 px-3 py-1 rounded-full">
+                                <i class="fa-solid fa-check"></i>
+                                با افزونه DualSub (قدرت هوش مصنوعی)
+                            </span>
+                            <span class="text-xs text-emerald-400 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                پیشنهاد شده
+                            </span>
+                        </div>
+
+                        <!-- Mockup Subtitle Box - Good -->
+                        <div class="sub-preview-screen p-5 mb-6 text-center border-[#00f2fe]/30 shadow-[0_0_20px_rgba(0,242,254,0.15)]">
+                            <p class="text-xs text-amber-300 font-bold font-mono mb-1.5 dir-ltr">Where I was basically paid to play games with kids all day .</p>
+                            <div class="p-2.5 bg-black/80 rounded-lg border border-[#00f2fe]/40 shadow-inner">
+                                <p class="text-sm text-white font-bold text-emerald-300 font-sans">«جایی که عملاً به من پول می‌دادند تا تمام روز با بچه‌ها بازی کنم.»</p>
+                            </div>
+                        </div>
+
+                        <ul class="space-y-3 text-sm text-gray-200">
+                            <li class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-circle-check text-emerald-400 mt-1 shrink-0"></i>
+                                <span class="font-medium">کلیک روی هر واژه: مشاهده فونتیک، تلفظ صوتی و توضیح عمیق کانتکست با AI</span>
+                            </li>
+                            <li class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-circle-check text-emerald-400 mt-1 shrink-0"></i>
+                                <span class="font-medium">نمایش همزمان انگلیسی و فارسی جهت تقویت لیسنینگ و فهم ۱۰۰٪ محتوا</span>
+                            </li>
+                            <li class="flex items-start gap-2.5">
+                                <i class="fa-solid fa-circle-check text-emerald-400 mt-1 shrink-0"></i>
+                                <span class="font-medium">ترجمه مفهومی، دقیق و روان بدون نیاز به خارج شدن از محیط یوتیوب</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    <!-- AI Dictionary Showcase Section (Spotlight) -->
+    <section class="relative z-10 py-14 sm:py-24 border-t border-white/10 bg-[#090D16]">
         <div class="max-w-6xl mx-auto px-4">
-            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-10 sm:mb-16 text-white px-2">
-                چرا این افزونه بهترین انتخاب برای تماشای یوتیوب است؟
-            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+                
+                <!-- Right: Visual Image Card showing AI analysis popup -->
+                <div class="reveal-init order-2 lg:order-1">
+                    <div class="hero-mockup-card rounded-2xl sm:rounded-3xl overflow-hidden relative border border-[#00f2fe]/30 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(0,242,254,0.2)]">
+                        <div class="video-glow-underlay"></div>
+                        <!-- Browser Bar -->
+                        <div class="bg-[#090D16]/95 px-4 py-2.5 border-b border-white/10 flex items-center justify-between gap-4 text-xs text-gray-400">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+                            </div>
+                            <span class="text-xs text-gray-300 font-medium flex items-center gap-1.5">
+                                <i class="fa-solid fa-wand-magic-sparkles text-[#00f2fe]"></i>
+                                پاپ‌آپ تحلیل هوشمند کلمات در محیط یوتیوب
+                            </span>
+                            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">Live Demo</span>
+                        </div>
+                        <img src="ai-dictionary-demo.png" alt="پاپ‌آپ تحلیل هوش مصنوعی و دیکشنری کانتکست افزونه DualSub"
+                            class="w-full h-auto object-cover block">
+                    </div>
+                </div>
+
+                <!-- Left: Content & Bullet Points -->
+                <div class="reveal-init stagger-1 text-right flex flex-col justify-center order-1 lg:order-2">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#00f2fe]/10 border border-[#00f2fe]/30 text-[#00f2fe] text-xs font-bold mb-4 w-fit">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>دیکشنری هوشمند کانتکست (Smart Context AI)</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-4xl font-black text-white leading-tight mb-4">
+                        روی هر کلمه کلیک کنید؛ <br>
+                        <span class="text-ai-gradient">هوش مصنوعی مفهوم را کالبدشکافی می‌کند!</span>
+                    </h2>
+                    <p class="text-sm sm:text-base text-gray-300 leading-relaxed mb-6">
+                        دیگر نیازی به باز کردن دیکشنری‌های مجزا یا توقف ویدیو نیست. با کلیک روی هر کلمه در خط زیرنویس، پنجره تحلیل هوشمند با امکانات زیر ظاهر می‌شود:
+                    </p>
+
+                    <div class="space-y-4 text-sm text-gray-200">
+                        
+                        <!-- Item 1: Audio & Phonetics -->
+                        <div class="spotlight-feature-card card-cyan">
+                            <div class="spotlight-icon-box bg-[#00f2fe]/15 border border-[#00f2fe]/30 text-[#00f2fe]">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <h4 class="font-bold text-white text-base">تلفظ صوتی و فونتیک دقیق</h4>
+                                    <span class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-[#00f2fe]/10 text-[#00f2fe] border border-[#00f2fe]/20">/Phonetics/</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                                    شنیدن فوری تلفظ با لهجه بومی استاندارد به همراه علائم فونتیک بین‌المللی برای یادگیری نحوه ادای صحیح کلمه.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Item 2: Context-Aware Meaning -->
+                        <div class="spotlight-feature-card card-emerald">
+                            <div class="spotlight-icon-box bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                                <i class="fa-solid fa-bullseye"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <h4 class="font-bold text-white text-base">معنی دقیق در بافت همان صحنه (Context)</h4>
+                                    <span class="text-[11px] px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">هوش مصنوعی</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                                    تشخیص هوشمند بهترین معنی متناسب با مفهوم کلی جمله و موضوع ویدیو به جای نمایش لیست معانی گیج‌کننده دیکشنری‌ها.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Item 3: AI Grammar & Slang Notes -->
+                        <div class="spotlight-feature-card card-purple">
+                            <div class="spotlight-icon-box bg-[#a855f7]/15 border border-[#a855f7]/30 text-[#a855f7]">
+                                <i class="fa-solid fa-lightbulb"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between gap-2 mb-1">
+                                    <h4 class="font-bold text-white text-base">نکات گرامری و محاوره‌ای AI</h4>
+                                    <span class="text-[11px] px-2 py-0.5 rounded-md bg-[#a855f7]/10 text-[#a855f7] border border-[#a855f7]/20">تحلیل عمیق</span>
+                                </div>
+                                <p class="text-xs sm:text-sm text-gray-400 leading-relaxed">
+                                    تحلیل هوشمند قواعد دستوری، اصطلاحات عامیانه (Slang & Idioms) و دلیل دقیق استفاده از این عبارت در مکالمه ویدیو.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section: 4 High-Impact Feature Cards -->
+    <section id="features"
+        class="relative z-10 py-14 sm:py-24 border-t border-white/10 bg-[#0b0f17]">
+        <div class="max-w-6xl mx-auto px-4">
+            
+            <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#6157ff]/10 border border-[#6157ff]/30 text-[#6157ff] text-xs font-bold mb-4">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>امکانات نسل جدید</span>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-black text-white leading-tight mb-4">
+                    ویژگی‌هایی که یادگیری زبان را متحول می‌کنند
+                </h2>
+                <p class="text-sm sm:text-base text-gray-400">
+                    طراحی شده با مدرن‌ترین فناوری‌های هوش مصنوعی برای درک عمیق ویدیوها با بیشترین سرعت.
+                </p>
+            </div>
+
+            <!-- Features 4-Card Grid (2x2 on desktop) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                
+                <!-- Feature 1: Word Click Dictionary & AI Context (NEW!) -->
+                <div class="feature-card flex flex-col items-start justify-between">
+                    <div>
+                        <div class="icon-glow-box mb-6">
+                            <i class="fa-solid fa-book-open-reader"></i>
+                        </div>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#00f2fe]/10 text-[#00f2fe] text-xs font-bold mb-2">
+                            <span>قابلیت ویژه</span>
+                            <i class="fa-solid fa-star text-[10px]"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold mb-3 text-white">کلیک روی کلمات؛ تلفظ، معنی و توضیح هوش مصنوعی</h3>
+                        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                            روی هر کلمه‌ای در زیرنویس کلیک کنید تا بلافاصله پنجره هوشمند باز شود؛ شامل تلفظ صوتی با فونتیک، ترجمه دقیق در همان جمله، و نکات کاربردی و گرامری هوش مصنوعی درباره مفهوم کلمه در بافت ویدیو.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-white/5 w-full flex items-center justify-between text-xs text-[#00f2fe] font-bold">
+                        <span>دیکشنری هوشمند کانتکست</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Dual Subtitles -->
+                <div class="feature-card flex flex-col items-start justify-between">
+                    <div>
+                        <div class="icon-glow-box mb-6">
+                            <i class="fa-solid fa-language"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold mb-3 text-white">زیرنویس دوزبانه همزمان (DualSub)</h3>
+                        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                            متن اصلی انگلیسی در بالا و ترجمه فارسی در زیر آن با تفکیک رنگی جذاب نمایش داده می‌شود. بهترین روش علمی برای یادگیری واژگان جدید و تقویت مهارت شنیداری بدون خستگی ذهن.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-white/5 w-full flex items-center justify-between text-xs text-[#00f2fe] font-bold">
+                        <span>تقویت لیسنینگ و مکالمه</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 3: AI Translation -->
+                <div class="feature-card flex flex-col items-start justify-between">
+                    <div>
+                        <div class="icon-glow-box mb-6">
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold mb-3 text-white">ترجمه عمیق با هوش مصنوعی</h3>
+                        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                            مجهز به موتورهای پیشرفته هوش مصنوعی برای درک اصطلاحات تخصصی، اسلنگ‌ها، ضرب‌المثل‌ها و لهجه‌های مختلف با طبیعی‌ترین و روان‌ترین لحن فارسی، بدون خطاهای ترجمه ماشینی سنتی.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-white/5 w-full flex items-center justify-between text-xs text-[#00f2fe] font-bold">
+                        <span>درک اصطلاحات محاوره‌ای</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Full Customization -->
+                <div class="feature-card flex flex-col items-start justify-between">
+                    <div>
+                        <div class="icon-glow-box mb-6">
+                            <i class="fa-solid fa-sliders"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold mb-3 text-white">شخصی‌سازی کامل ظاهر و تنظیمات</h3>
+                        <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
+                            اندازه فونت، رنگ متن انگلیسی و فارسی، میزان شفافیت پس‌زمینه و جایگاه زیرنویس را مطابق میل خود شخصی‌سازی کنید؛ تا مطالعه زیرنویس برای چشمان شما کاملاً لذت‌بخش و راحت باشد.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-white/5 w-full flex items-center justify-between text-xs text-[#00f2fe] font-bold">
+                        <span>سفارشی‌سازی دلخواه فونت و رنگ</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works: Interactive Timeline -->
+    <section id="how-it-works" class="relative z-10 py-14 sm:py-24">
+        <div class="max-w-5xl mx-auto px-4">
+            
+            <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-4">
+                    <i class="fa-solid fa-circle-play"></i>
+                    <span>راهنمای گام به گام</span>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-black text-white leading-tight mb-4">
+                    آموزش فعال‌سازی در ۳ مرحله ساده
+                </h2>
+                <p class="text-sm sm:text-base text-gray-400">
+                    بدون نیاز به ثبت‌نام یا تنظیمات پیچیده، در کمتر از یک دقیقه آماده استفاده شوید:
+                </p>
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-                <div
-                    class="bg-[#0f172a]/50 p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-[#00f2fe]/50 transition duration-300 hover:shadow-[0_0_25px_rgba(0,242,254,0.15)] group flex flex-col items-start backdrop-blur-sm">
-                    <div
-                        class="w-14 h-14 sm:w-16 sm:h-16 bg-[#090D16] border border-white/10 rounded-xl flex items-center justify-center text-2xl sm:text-3xl mb-5 sm:mb-6 group-hover:text-[#00f2fe] text-gray-400 transition shrink-0">
-                        <i class="fa-solid fa-language"></i>
+                
+                <!-- Step 1 -->
+                <div class="step-card flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="step-number-badge">۱</div>
+                            <i class="fa-brands fa-chrome text-2xl text-gray-500"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2.5">نصب مستقیم از کروم استور</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            روی دکمه دانلود کلیک کرده و با یک کلیک افزونه را به مرورگر Google Chrome خود اضافه کنید.
+                        </p>
                     </div>
-                    <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">زیرنویس دوزبانه؛ ایده‌آل برای
-                        یادگیری</h3>
-                    <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
-                        با نمایش همزمان زیرنویس انگلیسی و فارسی، این افزونه کروم برای یادگیری زبان با یوتیوب به یک ابزار
-                        بی‌رقیب تبدیل شده است.
-                    </p>
+                    <div class="mt-6 text-xs text-gray-500 font-medium">زمان مورد نیاز: ۵ ثانیه</div>
                 </div>
 
-                <div
-                    class="bg-[#0f172a]/50 p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-[#00f2fe]/50 transition duration-300 hover:shadow-[0_0_25px_rgba(0,242,254,0.15)] group flex flex-col items-start backdrop-blur-sm">
-                    <div
-                        class="w-14 h-14 sm:w-16 sm:h-16 bg-[#090D16] border border-white/10 rounded-xl flex items-center justify-center text-2xl sm:text-3xl mb-5 sm:mb-6 group-hover:text-[#00f2fe] text-gray-400 transition shrink-0">
-                        <i class="fa-solid fa-brain"></i>
+                <!-- Step 2 -->
+                <div class="step-card flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="step-number-badge">۲</div>
+                            <i class="fa-brands fa-youtube text-2xl text-red-500"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2.5">باز کردن هر ویدیوی دلخواه</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            وارد یوتیوب شوید و هر ویدیوی انگلیسی یا زبان دیگر را پلی کنید؛ افزونه آماده کار خواهد بود.
+                        </p>
                     </div>
-                    <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">ترجمه دقیق‌تر با هوش مصنوعی</h3>
-                    <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
-                        خداحافظی با ترجمه‌های ماشینی و بی‌معنی! از قدرت درک مطلب هوش مصنوعی برای ترجمه همزمان ویدیوهای
-                        یوتیوب استفاده کنید.
-                    </p>
+                    <div class="mt-6 text-xs text-gray-500 font-medium">زمان مورد نیاز: آنی</div>
                 </div>
 
-                <div
-                    class="bg-[#0f172a]/50 p-6 sm:p-8 rounded-2xl border border-white/10 hover:border-[#00f2fe]/50 transition duration-300 hover:shadow-[0_0_25px_rgba(0,242,254,0.15)] group flex flex-col items-start backdrop-blur-sm">
-                    <div
-                        class="w-14 h-14 sm:w-16 sm:h-16 bg-[#090D16] border border-white/10 rounded-xl flex items-center justify-center text-2xl sm:text-3xl mb-5 sm:mb-6 group-hover:text-[#00f2fe] text-gray-400 transition shrink-0">
-                        <i class="fa-solid fa-microchip"></i>
+                <!-- Step 3 -->
+                <div class="step-card flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-5">
+                            <div class="step-number-badge">۳</div>
+                            <i class="fa-solid fa-closed-captioning text-2xl text-[#00f2fe]"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2.5">روشن کردن زیرنویس (CC)</h3>
+                        <p class="text-sm text-gray-400 leading-relaxed">
+                            دکمه زیرنویس یوتیوب را فعال کنید تا خط دوزبانه با ترجمه هوش مصنوعی بلافاصله نمایان شود.
+                        </p>
                     </div>
-                    <h3 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-white">مدیریت هوشمند و رایگان ماندن</h3>
-                    <p class="text-sm sm:text-base text-gray-400 leading-relaxed">
-                        رفع مشکل محدودیت در ترجمه یوتیوب! سیستم هوشمند ما پردازش‌ها را مدیریت می‌کند تا بتوانید رایگان
-                        به تماشای ویدیوها بپردازید.
-                    </p>
+                    <div class="mt-6 text-xs text-gray-500 font-medium">لذت تماشای بدون مرز 🎉</div>
                 </div>
+
             </div>
+
         </div>
     </section>
 
-    <!-- How it works -->
-    <section id="how-it-works" class="relative z-10 py-12 sm:py-20">
-        <div class="max-w-4xl mx-auto px-4">
-            <div
-                class="bg-[#0f172a]/60 p-6 sm:p-10 rounded-2xl sm:rounded-3xl border border-white/10 relative overflow-hidden backdrop-blur-md shadow-2xl">
-                <div
-                    class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2fe] to-transparent opacity-60">
-                </div>
-
-                <h2
-                    class="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-8 text-center text-transparent bg-clip-text bg-gradient-to-r from-[#00f2fe] to-[#10b981] text-glow">
-                    آموزش فعال‌سازی زیرنویس فارسی یوتیوب
-                </h2>
-                <p class="text-sm sm:text-base text-gray-400 mb-6 sm:mb-8 text-center">
-                    چگونه زیرنویس یوتیوب را فعال کنیم؟ فقط در ۳ مرحله کوتاه:
-                </p>
-
-                <ol class="space-y-3 sm:space-y-4 text-sm sm:text-lg text-gray-300 font-medium">
-                    <li
-                        class="flex items-start sm:items-center gap-3 sm:gap-4 bg-[#090D16]/80 p-4 sm:p-5 rounded-xl border border-white/10">
-                        <span
-                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm sm:text-base shrink-0 mt-0.5 sm:mt-0">۱</span>
-                        <span class="leading-relaxed">افزونه مترجم فارسی یوتیوب را از Chrome Web Store نصب کنید.</span>
-                    </li>
-                    <li
-                        class="flex items-start sm:items-center gap-3 sm:gap-4 bg-[#090D16]/80 p-4 sm:p-5 rounded-xl border border-white/10">
-                        <span
-                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm sm:text-base shrink-0 mt-0.5 sm:mt-0">۲</span>
-                        <span class="leading-relaxed">وارد یک ویدیوی یوتیوب شوید و روی آیکون افزونه کلیک کنید.</span>
-                    </li>
-                    <li
-                        class="flex items-start sm:items-center gap-3 sm:gap-4 bg-[#090D16]/80 p-4 sm:p-5 rounded-xl border border-white/10">
-                        <span
-                            class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#00f2fe]/20 text-[#00f2fe] flex items-center justify-center font-bold text-sm sm:text-base shrink-0 mt-0.5 sm:mt-0">۳</span>
-                        <span class="leading-relaxed">زیرنویس (CC) را روشن کرده و از تماشای دوزبانه لذت ببرید.</span>
-                    </li>
-                </ol>
-            </div>
-        </div>
-    </section>
-
-    <!-- E-E-A-T: Trust & Privacy -->
+    <!-- Trust & Privacy E-E-A-T Section -->
     <section id="privacy"
-        class="relative z-10 py-12 sm:py-20 bg-[#0b0f17]/60 border-y border-white/10 backdrop-blur-md">
+        class="relative z-10 py-12 sm:py-20 bg-[#0b0f17] border-y border-white/10">
         <div class="max-w-4xl mx-auto px-4 text-center">
-            <i
-                class="fa-solid fa-shield-halved text-4xl sm:text-6xl text-[#00f2fe] mb-4 sm:mb-6 drop-shadow-[0_0_20px_rgba(0,242,254,0.6)]"></i>
-            <h2 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-white">حریم خصوصی شما؛ امنیت ۱۰۰٪ تضمین شده</h2>
-            <p
-                class="text-base sm:text-xl leading-relaxed text-gray-300 bg-[#0f172a]/60 p-6 sm:p-8 rounded-2xl border border-white/10 border-r-4 border-r-[#00f2fe] text-right backdrop-blur-md">
-                «این افزونه هیچ‌گونه اطلاعات شخصی یا کلیدهای API شما را در سرورهای خارجی ذخیره نمی‌کند. همه پردازش‌ها
-                امن و محلی (Local) است.»
+            <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 rounded-2xl bg-[#00f2fe]/10 border border-[#00f2fe]/30 flex items-center justify-center text-[#00f2fe] text-3xl sm:text-4xl shadow-[0_0_30px_rgba(0,242,254,0.3)]">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black mb-4 text-white">امنیت و حریم خصوصی ۱۰۰٪ تضمین شده</h2>
+            <p class="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto mb-8">
+                ما به حریم خصوصی شما احترام می‌گذاریم. این افزونه بر اساس استانداردهای سختگیرانه امنیتی Chrome Extension Manifest V3 طراحی شده است.
             </p>
+            <div class="bg-[#0f172a]/70 p-6 sm:p-8 rounded-2xl border border-white/10 border-r-4 border-r-[#00f2fe] text-right backdrop-blur-md shadow-2xl">
+                <p class="text-base sm:text-lg leading-relaxed text-gray-200 font-medium">
+                    «این افزونه هیچ‌گونه اطلاعات هویتی، سابقه مرور، پسورد یا کلیدهای API شما را در هیچ سرور خارجی ذخیره یا ارسال نمی‌کند. کلیه عملیات پردازش و نمایش به صورت کاملاً امن و محلی (Local) درون مرورگر شما انجام می‌گیرد.»
+                </p>
+            </div>
         </div>
     </section>
 
     <!-- FAQ Section -->
-    <section id="faq" class="relative z-10 py-12 sm:py-20">
+    <section id="faq" class="relative z-10 py-14 sm:py-24">
         <div class="max-w-4xl mx-auto px-4">
-            <h2 class="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-white">سوالات متداول (FAQ)</h2>
+            
+            <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 text-xs font-bold mb-4">
+                    <i class="fa-solid fa-circle-question text-[#00f2fe]"></i>
+                    <span>پاسخ به سوالات</span>
+                </div>
+                <h2 class="text-2xl sm:text-4xl font-black text-white mb-3">سوالات متداول (FAQ)</h2>
+                <p class="text-sm sm:text-base text-gray-400">تمام آنچه برای شروع نیاز دارید بدانید</p>
+            </div>
 
             <div class="space-y-3 sm:space-y-4">
-                <div
-                    class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#00f2fe]/50 backdrop-blur-sm">
+                
+                <div class="faq-item">
                     <button
                         class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
                         onclick="toggleFaq(this)">
-                        <span>چگونه زیرنویس یوتیوب را فارسی کنیم؟</span>
+                        <span>چگونه زیرنویس یوتیوب را به فارسی تبدیل کنیم؟</span>
                         <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                     </button>
-                    <div
-                        class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                    <div class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
                         <div class="pt-4 pb-5">
-                            با نصب این اکستنشن ترجمه یوتیوب, کافیست وارد ویدیو شوید, آیکون افزونه را بزنید و زبان فارسی
-                            را انتخاب کنید تا زیرنویس به صورت دوزبانه و همزمان نمایش داده شود.
+                            با نصب رایگان افزونه DualSub از کروم استور، کافیست وارد هر ویدیوی یوتیوب شوید و دکمه زیرنویس (CC) را بزنید. افزونه به طور خودکار متن را ترجمه کرده و همزمان خط انگلیسی و فارسی را با فونت خوانا نمایش می‌دهد.
                         </div>
                     </div>
                 </div>
 
-                <div
-                    class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#00f2fe]/50 backdrop-blur-sm">
+                <div class="faq-item">
                     <button
                         class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
                         onclick="toggleFaq(this)">
-                        <span>آیا استفاده از این ابزار واقعا رایگان است؟</span>
+                        <span>آیا استفاده از این ابزار واقعاً رایگان است؟</span>
                         <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                     </button>
-                    <div
-                        class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                    <div class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
                         <div class="pt-4 pb-5">
-                            بله! ما با پیاده‌سازی سیستم مدیریت هوشمند کاری کرده‌ایم که بدون نیاز به تنظیمات پیچیده، به
-                            صورت رایگان از ترجمه هوشمند استفاده کنید.
+                            ما تمام تلاشمون رو کردیم که امکانات اصلی و پرکاربرد افزونه (مانند نمایش زیرنویس دوزبانه، ترجمه همزمان و دیکشنری کلمات) به صورت کاملاً رایگان در اختیار همه قرار بگیره تا بدون هیچ هزینه‌ای از یادگیری زبان و تماشای ویدیوها لذت ببرید. با این حال، برای استفاده‌های بسیار پیشرفته‌تر و پردازش‌های سنگین با مدل‌های زبانی پریمیوم هوش مصنوعی، امکان اتصال مستقیم مدل‌های زبانی نیز فراهم شده است تا دسترسی نامحدود و با بالاترین کیفیت ممکن را تجربه کنید.
                         </div>
                     </div>
                 </div>
 
-                <div
-                    class="faq-item bg-[#0f172a]/50 border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:border-[#00f2fe]/50 backdrop-blur-sm">
+                <div class="faq-item">
                     <button
                         class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
                         onclick="toggleFaq(this)">
-                        <span>آیا می‌توانم ظاهر و رنگ زیرنویس‌ها را تغییر دهم؟</span>
+                        <span>قابلیت کلیک روی کلمات چگونه کار می‌کند؟</span>
                         <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
                     </button>
-                    <div
-                        class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                    <div class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
                         <div class="pt-4 pb-5">
-                            دقیقاً. در تنظیمات افزونه شما می‌توانید اندازه متن، فونت، رنگ متن اصلی و رنگ زیرنویس فارسی
-                            را مطابق سلیقه خود کاملاً شخصی‌سازی کنید.
+                            هنگام تماشای ویدیو، با کلیک روی هر کلمه در خط زیرنویس انگلیسی، پنجره هوشمندی باز می‌شود که تلفظ صوتی با فونتیک، معانی مختلف و یک توضیح هوشمند از نقش و کاربرد آن کلمه در همان زمینه (Context) جمله را به شما ارائه می‌دهد.
                         </div>
                     </div>
                 </div>
+
+                <div class="faq-item">
+                    <button
+                        class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
+                        onclick="toggleFaq(this)">
+                        <span>آیا می‌توان ظاهر، رنگ و اندازه فونت را شخصی‌سازی کرد؟</span>
+                        <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
+                    </button>
+                    <div class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                        <div class="pt-4 pb-5">
+                            قطعاً. در منوی تنظیمات افزونه می‌توانید اندازه قلم، رنگ متن اصلی انگلیسی، رنگ زیرنویس فارسی، شدت شفافیت پس‌زمینه و حتی فونت را کاملاً متناسب با راحتی چشمان خود تنظیم کنید.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button
+                        class="w-full px-5 sm:px-6 py-4 sm:py-5 text-right font-bold text-base sm:text-lg text-gray-200 flex justify-between items-center gap-4 focus:outline-none min-h-[52px]"
+                        onclick="toggleFaq(this)">
+                        <span>آیا افزونه روی مرورگرهای دیگر مانند Edge یا Brave کار می‌کند؟</span>
+                        <i class="fa-solid fa-chevron-down text-gray-500 shrink-0"></i>
+                    </button>
+                    <div class="faq-answer px-5 sm:px-6 text-sm sm:text-base text-gray-400 leading-relaxed border-t border-white/10">
+                        <div class="pt-4 pb-5">
+                            بله، تمام مرورگرهای مبتنی بر Chromium از جمله Microsoft Edge, Brave, Opera و Arc قادر به نصب و اجرای مستقیم این افزونه از طریق Chrome Web Store هستند.
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
 
+    <!-- Bottom Call To Action (High-Converting Conversion Strip) -->
+    <section class="relative z-10 py-12 sm:py-16 bg-gradient-to-r from-[#00f2fe]/10 via-[#6157ff]/10 to-[#10b981]/10 border-t border-white/10 text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-4">
+                آماده‌اید تجربه تماشای یوتیوب را متحول کنید؟
+            </h2>
+            <p class="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto mb-8 leading-relaxed">
+                به جمع صدها کاربری بپیوندید که زبان انگلیسی را روزانه با لذت و ویدیوهای مورد علاقه خود یاد می‌گیرند.
+            </p>
+            <a href="https://chromewebstore.google.com/detail/cdbfmlcnememmgajchbjhhedjpaanaic?authuser=0&hl=en"
+                target="_blank" rel="nofollow"
+                class="inline-flex items-center justify-center gap-3 btn-shimmer px-8 sm:px-10 py-4 rounded-2xl font-extrabold text-base sm:text-lg active:scale-95 border border-white/30">
+                <i class="fa-brands fa-chrome text-xl sm:text-2xl shrink-0 text-[#090D16]"></i>
+                <span>نصب رایگان روی کروم (کمتر از ۱۰ ثانیه)</span>
+            </a>
+        </div>
+    </section>
+
     <!-- About Developer -->
-    <section id="about" class="relative z-10 py-12 sm:py-16 bg-[#0b0f17]/60 border-t border-white/10 backdrop-blur-md">
-        <div
-            class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center md:items-start text-center md:text-right gap-6 sm:gap-8">
-            <div
-                class="w-20 h-20 sm:w-24 sm:h-24 bg-[#0f172a] border border-[#00f2fe]/40 rounded-full flex items-center justify-center text-3xl sm:text-4xl text-[#00f2fe] shrink-0 shadow-[0_0_20px_rgba(0,242,254,0.3)]">
+    <section id="about" class="relative z-10 py-12 sm:py-16 bg-[#090D16] border-t border-white/10">
+        <div class="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center md:items-start text-center md:text-right gap-6 sm:gap-8">
+            <div class="w-20 h-20 sm:w-24 sm:h-24 bg-[#0f172a] border border-[#00f2fe]/40 rounded-full flex items-center justify-center text-3xl sm:text-4xl text-[#00f2fe] shrink-0 shadow-[0_0_20px_rgba(0,242,254,0.3)]">
                 <i class="fa-solid fa-code"></i>
             </div>
             <div class="flex-1">
-                <h3 class="text-xl sm:text-2xl font-bold mb-3 text-white">درباره توسعه‌دهنده</h3>
+                <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
+                    <h3 class="text-xl sm:text-2xl font-bold text-white">درباره توسعه‌دهنده</h3>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                </div>
                 <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
                     به عنوان یک برنامه‌نویس، همیشه برای تماشای ویدیوهای آموزشی با چالش زبان مواجه بودم. تصمیم گرفتم
                     ابزاری بسازم که نه تنها ترجمه سریع و دقیقی ارائه دهد، بلکه محدودیت‌ها را دور بزند تا همه بتوانند
@@ -422,26 +774,27 @@
     <!-- Footer -->
     {% include footer.html %}
 
-    <!-- Interactive Scripts -->
+    <!-- Interactive Pure Vanilla Scripts -->
     <script>
-        // Mobile Navigation Drawer Toggle Logic
+        // 1. Mobile Navigation Drawer Toggle
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileMenuIcon = document.getElementById('mobile-menu-icon');
         const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
 
         function toggleMobileMenu() {
+            if (!mobileMenu) return;
             const isOpen = !mobileMenu.classList.contains('hidden');
             if (isOpen) {
                 mobileMenu.classList.add('hidden');
-                mobileMenuBtn.setAttribute('aria-expanded', 'false');
-                mobileMenuIcon.classList.remove('fa-xmark');
-                mobileMenuIcon.classList.add('fa-bars');
+                mobileMenuBtn && mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                mobileMenuIcon && mobileMenuIcon.classList.remove('fa-xmark');
+                mobileMenuIcon && mobileMenuIcon.classList.add('fa-bars');
             } else {
                 mobileMenu.classList.remove('hidden');
-                mobileMenuBtn.setAttribute('aria-expanded', 'true');
-                mobileMenuIcon.classList.remove('fa-bars');
-                mobileMenuIcon.classList.add('fa-xmark');
+                mobileMenuBtn && mobileMenuBtn.setAttribute('aria-expanded', 'true');
+                mobileMenuIcon && mobileMenuIcon.classList.remove('fa-bars');
+                mobileMenuIcon && mobileMenuIcon.classList.add('fa-xmark');
             }
         }
 
@@ -451,7 +804,7 @@
 
         mobileNavLinks.forEach(link => {
             link.addEventListener('click', () => {
-                if (!mobileMenu.classList.contains('hidden')) {
+                if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
                     toggleMobileMenu();
                 }
             });
@@ -463,7 +816,7 @@
             }
         });
 
-        // FAQ Accordion Logic
+        // 2. FAQ Accordion Logic
         function toggleFaq(button) {
             const item = button.parentElement;
             const isAlreadyActive = item.classList.contains('faq-active');
@@ -476,6 +829,67 @@
                 item.classList.add('faq-active');
             }
         }
+
+        // 3. Dynamic Subtitle Typewriter Effect
+        const subtitleSamples = [
+            '"Artificial Intelligence is changing education." ➔ «هوش مصنوعی در حال تغییر آموزش است.»',
+            '"Click any word to get instant AI context & pronunciation." ➔ «با کلیک روی هر کلمه، تلفظ و توضیح هوش مصنوعی را ببینید.»',
+            '"Consistency is key to mastering English." ➔ «استمرار کلید تسلط بر زبان انگلیسی است.»',
+            '"Where there is a will, there is a way." ➔ «خواستن، توانستن است.»'
+        ];
+
+        let sampleIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typewriterEl = document.getElementById('typewriter-text');
+
+        function typeWriter() {
+            if (!typewriterEl) return;
+            const currentSample = subtitleSamples[sampleIndex];
+            
+            if (isDeleting) {
+                typewriterEl.textContent = currentSample.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typewriterEl.textContent = currentSample.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let typeSpeed = isDeleting ? 30 : 60;
+
+            if (!isDeleting && charIndex === currentSample.length) {
+                typeSpeed = 3000; // Pause at full sentence
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                sampleIndex = (sampleIndex + 1) % subtitleSamples.length;
+                typeSpeed = 500; // Pause before typing new sentence
+            }
+
+            setTimeout(typeWriter, typeSpeed);
+        }
+
+        // 4. Scroll Reveal IntersectionObserver
+        document.addEventListener('DOMContentLoaded', () => {
+            typeWriter();
+
+            const revealElements = document.querySelectorAll('.reveal-init');
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('reveal-visible');
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.1 });
+
+                revealElements.forEach(el => observer.observe(el));
+            } else {
+                // Fallback for older browsers
+                revealElements.forEach(el => el.classList.add('reveal-visible'));
+            }
+        });
     </script>
 </body>
 

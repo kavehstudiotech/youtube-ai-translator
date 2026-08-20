@@ -10,6 +10,7 @@
     "https://openrouter.ai/*",
     "https://generativelanguage.googleapis.com/*",
     "https://translate.googleapis.com/*",
+    "https://*.workers.dev/*",
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],

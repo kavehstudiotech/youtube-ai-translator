@@ -61,6 +61,8 @@ const DEFAULTS = {
   bgColor: '#000000',
   bgOpacity: 0.55,
   bottomOffset: 8,
+  cloudCacheEnabled: true,
+  cloudCacheShare: true,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -99,6 +101,8 @@ const FIELDS = {
   bgColor: 'value',
   bgOpacity: 'pct',
   bottomOffset: 'int',
+  cloudCacheEnabled: 'checked',
+  cloudCacheShare: 'checked',
 };
 
 let current = { ...DEFAULTS };
@@ -904,7 +908,16 @@ function renderSavedWords() {
       (item) => `
     <div class="saved-card" data-id="${item.id}">
       <div class="saved-card-header">
-        <div class="saved-word-badge" dir="ltr">${escapeHtml(item.word || item.en)}</div>
+        <div class="saved-word-header-left">
+          <div class="saved-word-badge" dir="ltr">${escapeHtml(item.word || item.en)}</div>
+          ${item.ipa ? `<span class="saved-ipa">/${escapeHtml(item.ipa)}/</span>` : ''}
+          <button type="button" class="btn-play-audio" data-word="${escapeHtml(item.word || item.en)}" title="پخش تلفظ صوتی (Native)">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </button>
+        </div>
         <button type="button" class="btn-delete-saved" data-id="${item.id}" title="حذف کلمه">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
         </button>
@@ -929,6 +942,8 @@ function renderSavedWords() {
         <div class="saved-fa-context" dir="rtl">${formatMarkdown(item.fa || '—')}</div>
       </div>
 
+      ${item.tutorNote ? `<div class="saved-tutor-note">💡 ${escapeHtml(item.tutorNote)}</div>` : ''}
+
       <div class="saved-meta">
         <a href="${escapeHtml(item.url)}" target="_blank" rel="noopener" class="saved-url-link" title="${escapeHtml(item.title)}">
           <span class="saved-title">${escapeHtml(item.title || 'ویدیو یوتیوب')}</span>
@@ -939,6 +954,13 @@ function renderSavedWords() {
     </div>`
     )
     .join('');
+
+  container.querySelectorAll('.btn-play-audio').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      speakWord(btn.dataset.word);
+    });
+  });
 
   container.querySelectorAll('.btn-delete-saved').forEach((btn) => {
     btn.addEventListener('click', async (e) => {
@@ -973,11 +995,21 @@ function renderSavedWords() {
         });
 
         if (response && response.ok && response.translation) {
-          if (input) input.value = response.translation;
-          if (display) display.innerHTML = formatMarkdown(response.translation) || '<span class="placeholder-text">معنی فارسی این کلمه را وارد کنید…</span>';
-          wordItem.wordFa = response.translation;
+          const trans = typeof response.translation === 'object'
+            ? response.translation.translation
+            : response.translation;
+          const ipa = typeof response.translation === 'object' ? response.translation.ipa : '';
+          const tutorNote = typeof response.translation === 'object' ? response.translation.tutorNote : '';
+
+          if (input) input.value = trans;
+          if (display) display.innerHTML = formatMarkdown(trans) || '<span class="placeholder-text">معنی فارسی این کلمه را وارد کنید…</span>';
+          wordItem.wordFa = trans;
+          if (ipa) wordItem.ipa = ipa;
+          if (tutorNote) wordItem.tutorNote = tutorNote;
+
           await chrome.storage.local.set({ savedWords: allSavedWords });
           if (statusEl) statusEl.textContent = '✓ ذخیره شد';
+          renderSavedWords();
         } else {
           if (statusEl) statusEl.textContent = 'خطا در دریافت';
         }
@@ -1046,45 +1078,58 @@ function renderSavedWords() {
   });
 }
 
+function speakWord(text) {
+  if (!text || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.warn('[ytfa] TTS error:', e);
+  }
+}
+
 function exportAnkiCsv() {
   if (!allSavedWords.length) {
     alert('کلمه‌ای برای دریافت خروجی ذخیره نشده است.');
     return;
   }
 
-  function escapeCsv(val) {
-    if (val == null) return '""';
-    return '"' + String(val).replace(/"/g, '""') + '"';
+  function escapeField(val) {
+    if (val == null) return '';
+    return String(val).replace(/:/g, '：').replace(/\n/g, ' ').trim();
   }
 
-  const rows = [
-    ['Word', 'Word Meaning', 'Sentence (EN)', 'Sentence (FA)', 'Video URL', 'Video Title'].map(escapeCsv).join(','),
-  ];
+  const rows = [];
 
   for (const item of allSavedWords) {
-    const word = item.word || item.en || '';
-    const wordFa = item.wordFa || '';
-    const sentenceEn = item.en || '';
-    const sentenceFa = item.fa || '';
-    const videoUrl = item.url || '';
-    const title = item.title || 'YouTube Video';
+    const word = escapeField(item.word || item.en || '');
+    const wordFa = escapeField(item.wordFa || '');
+    const synonyms = Array.isArray(item.synonyms) ? item.synonyms.join('، ') : '';
 
-    rows.push([
-      escapeCsv(word),
-      escapeCsv(wordFa),
-      escapeCsv(sentenceEn),
-      escapeCsv(sentenceFa),
-      escapeCsv(videoUrl),
-      escapeCsv(title)
-    ].join(','));
+    // Column 1 (Front): English word
+    const front = word;
+
+    // Column 2 (Back): Meaning + synonyms
+    let back = wordFa;
+    if (synonyms) {
+      back += ` (${escapeField(synonyms)})`;
+    }
+
+    // Column 3 (Tags)
+    const tags = 'dualsub-youtube';
+
+    rows.push(`${front}:${back}:${tags}`);
   }
 
   const csvContent = '\uFEFF' + rows.join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csvContent], { type: 'text/plain;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `dualsub-anki-deck-${new Date().toISOString().slice(0, 10)}.csv`);
+  link.setAttribute('download', `dualsub-anki-deck-${new Date().toISOString().slice(0, 10)}.txt`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

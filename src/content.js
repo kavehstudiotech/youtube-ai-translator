@@ -29,6 +29,14 @@ function getVideoIdFromUrl(url = window.location.href) {
   return null;
 }
 
+function isExtensionValid() {
+  try {
+    return typeof chrome !== 'undefined' && !!chrome?.runtime?.id;
+  } catch {
+    return false;
+  }
+}
+
 const MAX_CACHE_SIZE = 15;
 const captionCache = new Map();
 let currentVideoId = getVideoIdFromUrl();
@@ -104,6 +112,11 @@ let state = {
   rafId: null,
   translationSessionId: 0,
   videoMeta: null, // { title, category, keywords, shortDescription }
+  loadedFromCloudCache: false,
+  uploadedToCloud: false,
+  bypassCloudCache: false,
+  cachedModels: [], // array of { provider, modelId, modelName, cues, createdAt }
+  activeModelIndex: -1,
 };
 
 // Temporary visibility toggle (independent of settings.enabled).
@@ -311,31 +324,82 @@ function renderSingleWords(subText, parentEl) {
   }
 }
 
-async function onWordClick(spanEl, word) {
-  const cue = state.cues[state.currentIndex];
-  if (!cue) return;
-
-  spanEl.classList.add('ytfa-word-saved');
-  setTimeout(() => spanEl.classList.remove('ytfa-word-saved'), 800);
-
-  let wordFa = '';
+function speakWord(text) {
+  if (!text || !('speechSynthesis' in window)) return;
   try {
-    const dictResp = await chrome.runtime.sendMessage({
-      type: 'TRANSLATE_WORD_DICTIONARY',
-      word: word,
-      sentence: cue.text || ''
-    });
-    if (dictResp?.ok && dictResp.translation) {
-      wordFa = dictResp.translation;
-    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  } catch (e) {
+    console.warn('[ytfa] Speech synthesis failed:', e);
+  }
+}
+
+let tutorModalEl = null;
+
+function positionTutorModal(targetEl, modalEl, container) {
+  if (!targetEl || !modalEl || !container) return;
+  const containerRect = container.getBoundingClientRect();
+  const targetRect = targetEl.getBoundingClientRect();
+
+  // Position above the clicked word
+  let top = targetRect.top - containerRect.top - modalEl.offsetHeight - 10;
+  let left = targetRect.left - containerRect.left + (targetRect.width / 2) - (modalEl.offsetWidth / 2);
+
+  // If overflowing top of player, place it below the subtitle
+  if (top < 12) {
+    top = targetRect.bottom - containerRect.top + 10;
+  }
+  // Keep horizontally within container
+  if (left < 12) left = 12;
+  if (left + modalEl.offsetWidth > containerRect.width - 12) {
+    left = containerRect.width - modalEl.offsetWidth - 12;
+  }
+
+  modalEl.style.top = `${top}px`;
+  modalEl.style.left = `${left}px`;
+  modalEl.style.transform = 'none';
+}
+
+async function isWordSaved(word, en, videoId) {
+  if (!isExtensionValid() || !chrome?.storage?.local) return false;
+  try {
+    const data = await chrome.storage.local.get({ savedWords: [] });
+    const savedWords = data?.savedWords || [];
+    return savedWords.some(
+      (item) => (item.word || item.en) === word && item.en === en && item.videoId === videoId
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function removeWordFromFlashcards(word, en, videoId) {
+  if (!isExtensionValid() || !chrome?.storage?.local) return;
+  try {
+    const data = await chrome.storage.local.get({ savedWords: [] });
+    let savedWords = (data?.savedWords || []).filter(
+      (item) => !((item.word || item.en) === word && item.en === en && item.videoId === videoId)
+    );
+    await chrome.storage.local.set({ savedWords });
   } catch (err) {
-    console.warn('[ytfa] Dictionary fetch failed for word/phrase:', word, err);
+    console.warn('[ytfa] Failed to remove word from flashcards:', err);
+  }
+}
+
+async function saveWordToFlashcards(word, wordFa, en, fa, ipa = '', videoMeta = null) {
+  if (!isExtensionValid() || !chrome?.storage?.local) {
+    notify('افزونه به‌روزرسانی شد. لطفاً صفحه را تازه (رفرش) کنید 🔄');
+    return;
   }
 
   const vId = state.videoId || getVideoIdFromUrl() || 'video';
   const video = getVideo();
   const currentTimeSec = video ? Math.floor(video.currentTime) : 0;
   const rawTitle =
+    videoMeta?.title ||
     document.querySelector('h1.ytd-watch-metadata, h1.ytd-video-primary-info-renderer')
       ?.textContent?.trim() || document.title.replace('- YouTube', '').trim();
   const url = `https://www.youtube.com/watch?v=${vId}&t=${currentTimeSec}s`;
@@ -344,8 +408,9 @@ async function onWordClick(spanEl, word) {
     id: 'sw_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
     word: word,
     wordFa: wordFa,
-    en: cue.text || '',
-    fa: cue.fa || '',
+    ipa: ipa,
+    en: en || '',
+    fa: fa || '',
     title: rawTitle || 'ویدیو یوتیوب',
     url: url,
     videoId: vId,
@@ -353,23 +418,242 @@ async function onWordClick(spanEl, word) {
     dateAdded: new Date().toISOString(),
   };
 
-  const data = await chrome.storage.local.get({ savedWords: [] });
-  let savedWords = data.savedWords || [];
+  try {
+    const data = await chrome.storage.local.get({ savedWords: [] });
+    let savedWords = data?.savedWords || [];
 
-  const existsIndex = savedWords.findIndex(
-    (item) => (item.word || item.en) === word && item.en === cue.text && item.videoId === vId
-  );
+    const existsIndex = savedWords.findIndex(
+      (item) => (item.word || item.en) === word && item.en === en && item.videoId === vId
+    );
 
-  if (existsIndex === -1) {
-    savedWords.unshift(newItem);
-    await chrome.storage.local.set({ savedWords });
-    notify(`عبارت "${word}" به فلاش‌کارت‌ها اضافه شد ✓`);
-  } else {
-    if (wordFa && !savedWords[existsIndex].wordFa) {
-      savedWords[existsIndex].wordFa = wordFa;
-      await chrome.storage.local.set({ savedWords });
+    if (existsIndex === -1) {
+      savedWords.unshift(newItem);
+    } else {
+      if (wordFa) savedWords[existsIndex].wordFa = wordFa;
+      if (ipa) savedWords[existsIndex].ipa = ipa;
     }
-    notify(`عبارت "${word}" قبلاً ذخیره شده است.`);
+    await chrome.storage.local.set({ savedWords });
+  } catch (err) {
+    console.warn('[ytfa] Failed to save word to flashcards:', err);
+  }
+}
+
+function showAiTutorModal(targetSpan, word, sentence, tutorData, cueFa, videoMeta, isInitiallySaved, isLoading = false) {
+  if (tutorModalEl) tutorModalEl.remove();
+  const container = getActivePlayer() || document.body;
+  const vId = state.videoId || getVideoIdFromUrl() || 'video';
+
+  const trans = tutorData?.translation || '';
+  const ipa = tutorData?.ipa || '';
+  const formality = (tutorData?.formality || '').trim();
+  const synonyms = Array.isArray(tutorData?.synonyms) ? tutorData.synonyms : [];
+  const tutorNote = tutorData?.tutorNote || '';
+
+  tutorModalEl = document.createElement('div');
+  tutorModalEl.id = 'ytfa-tutor-modal';
+  tutorModalEl.dataset.word = word;
+  tutorModalEl.innerHTML = `
+    <div class="ytfa-tutor-header">
+      <div class="ytfa-tutor-word-box">
+        <span class="ytfa-tutor-word">${escapeHtml(word)}</span>
+        <span class="ytfa-tutor-ipa" style="${ipa ? '' : 'display:none'}">/${escapeHtml(ipa)}/</span>
+        <button type="button" class="ytfa-tutor-audio-btn" title="پخش تلفظ">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+        </button>
+        <span class="ytfa-tutor-badge" style="${formality && !isLoading ? '' : 'display:none'}">${escapeHtml(formality)}</span>
+      </div>
+      <div class="ytfa-tutor-actions">
+        <button type="button" class="ytfa-tutor-star-btn ${isInitiallySaved ? 'is-saved' : ''}" title="${isInitiallySaved ? 'حذف از فلاش‌کارت‌ها' : 'افزودن به فلاش‌کارت‌ها'}">
+          <svg class="ytfa-star-icon" viewBox="0 0 24 24" width="18" height="18" stroke="#fbbf24" stroke-width="2" fill="${isInitiallySaved ? '#fbbf24' : 'none'}" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </button>
+        <button type="button" class="ytfa-tutor-close" title="بستن">✕</button>
+      </div>
+    </div>
+    <div class="ytfa-tutor-body">
+      ${isLoading ? `
+        <div class="ytfa-tutor-loading">
+          <span class="ytfa-spinner"></span>
+          <span>در حال تحلیل هوش مصنوعی…</span>
+        </div>
+      ` : `
+        <div class="ytfa-tutor-trans-main">${escapeHtml(trans || word)}</div>
+        ${synonyms.length > 0 ? `<div class="ytfa-tutor-synonyms">سایر معانی: ${escapeHtml(synonyms.join('، '))}</div>` : ''}
+        ${tutorNote ? `
+          <div class="ytfa-tutor-note-box">
+            <div class="ytfa-tutor-note-title">💡 نکته:</div>
+            <div>${escapeHtml(tutorNote)}</div>
+          </div>
+        ` : ''}
+      `}
+      <div class="ytfa-tutor-context-box">
+        <div class="ytfa-tutor-en-sent">${escapeHtml(sentence)}</div>
+        ${cueFa ? `<div class="ytfa-tutor-fa-sent">${escapeHtml(cueFa)}</div>` : ''}
+      </div>
+    </div>
+  `;
+
+  // Speech synthesis button
+  tutorModalEl.querySelector('.ytfa-tutor-audio-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    speakWord(word);
+  });
+
+  // Star Toggle Button
+  const starBtn = tutorModalEl.querySelector('.ytfa-tutor-star-btn');
+  starBtn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const starIcon = starBtn.querySelector('.ytfa-star-icon');
+    const isNowSaved = starBtn.classList.contains('is-saved');
+
+    if (isNowSaved) {
+      await removeWordFromFlashcards(word, sentence, vId);
+      starBtn.classList.remove('is-saved');
+      starIcon.setAttribute('fill', 'none');
+      starBtn.title = 'افزودن به فلاش‌کارت‌ها';
+      notify(`عبارت "${word}" از فلاش‌کارت‌ها حذف شد.`);
+    } else {
+      const curTrans = tutorModalEl?.querySelector('.ytfa-tutor-trans-main')?.textContent || word;
+      const curIpa = tutorModalEl?.querySelector('.ytfa-tutor-ipa')?.textContent.replace(/\//g, '') || '';
+
+      await saveWordToFlashcards(
+        word,
+        curTrans,
+        sentence,
+        cueFa,
+        curIpa,
+        videoMeta
+      );
+      starBtn.classList.add('is-saved');
+      starIcon.setAttribute('fill', '#fbbf24');
+      starBtn.title = 'حذف از فلاش‌کارت‌ها';
+      starBtn.classList.add('ytfa-star-pop');
+      setTimeout(() => starBtn.classList.remove('ytfa-star-pop'), 400);
+      notify(`عبارت "${word}" به فلاش‌کارت‌ها اضافه شد ⭐`);
+    }
+  });
+
+  // Close button
+  tutorModalEl.querySelector('.ytfa-tutor-close').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (tutorModalEl) {
+      tutorModalEl.remove();
+      tutorModalEl = null;
+    }
+  });
+
+  // Prevent clicks inside modal from propagating
+  tutorModalEl.addEventListener('click', (e) => e.stopPropagation());
+
+  container.appendChild(tutorModalEl);
+
+  // Position relative to target word
+  positionTutorModal(targetSpan, tutorModalEl, container);
+
+  // Auto-speak pronunciation
+  speakWord(word);
+
+  // Close on outside click
+  const onDocClick = (e) => {
+    if (tutorModalEl && !tutorModalEl.contains(e.target) && e.target !== targetSpan) {
+      tutorModalEl.remove();
+      tutorModalEl = null;
+      document.removeEventListener('click', onDocClick);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', onDocClick), 50);
+}
+
+function updateAiTutorModalContent(word, sentence, tutorData, cueFa) {
+  if (!tutorModalEl || tutorModalEl.dataset.word !== word) return;
+
+  const trans = tutorData?.translation || word;
+  const ipa = tutorData?.ipa || '';
+  const formality = (tutorData?.formality || '').trim();
+  const synonyms = Array.isArray(tutorData?.synonyms) ? tutorData.synonyms : [];
+  const tutorNote = tutorData?.tutorNote || '';
+
+  const ipaEl = tutorModalEl.querySelector('.ytfa-tutor-ipa');
+  if (ipaEl) {
+    if (ipa) {
+      ipaEl.textContent = `/${ipa}/`;
+      ipaEl.style.display = '';
+    } else {
+      ipaEl.style.display = 'none';
+    }
+  }
+
+  const badgeEl = tutorModalEl.querySelector('.ytfa-tutor-badge');
+  if (badgeEl) {
+    if (formality) {
+      badgeEl.textContent = formality;
+      badgeEl.style.display = '';
+    } else {
+      badgeEl.style.display = 'none';
+    }
+  }
+
+  const bodyEl = tutorModalEl.querySelector('.ytfa-tutor-body');
+  if (bodyEl) {
+    bodyEl.innerHTML = `
+      <div class="ytfa-tutor-trans-main">${escapeHtml(trans)}</div>
+      ${synonyms.length > 0 ? `<div class="ytfa-tutor-synonyms">سایر معانی: ${escapeHtml(synonyms.join('، '))}</div>` : ''}
+      ${tutorNote ? `
+        <div class="ytfa-tutor-note-box">
+          <div class="ytfa-tutor-note-title">💡 نکته:</div>
+          <div>${escapeHtml(tutorNote)}</div>
+        </div>
+      ` : ''}
+      <div class="ytfa-tutor-context-box">
+        <div class="ytfa-tutor-en-sent">${escapeHtml(sentence)}</div>
+        ${cueFa ? `<div class="ytfa-tutor-fa-sent">${escapeHtml(cueFa)}</div>` : ''}
+      </div>
+    `;
+  }
+}
+
+async function onWordClick(spanEl, word) {
+  if (!isExtensionValid()) {
+    notify('افزونه به‌روزرسانی شد. لطفاً صفحه را تازه (رفرش) کنید 🔄');
+    return;
+  }
+
+  const cue = state.cues[state.currentIndex];
+  if (!cue) return;
+
+  spanEl.classList.add('ytfa-word-saved');
+  setTimeout(() => spanEl.classList.remove('ytfa-word-saved'), 500);
+
+  const vId = state.videoId || getVideoIdFromUrl() || 'video';
+  const initiallySaved = await isWordSaved(word, cue.text || '', vId);
+
+  // 1. Show modal INSTANTLY (0ms latency feedback)
+  showAiTutorModal(spanEl, word, cue.text || '', null, cue.fa || '', state.videoMeta, initiallySaved, true /* isLoading */);
+
+  // 2. Fetch full AI Tutor Dictionary details asynchronously
+  try {
+    const dictResp = await chrome.runtime.sendMessage({
+      type: 'TRANSLATE_WORD_DICTIONARY',
+      word: word,
+      sentence: cue.text || ''
+    });
+    if (dictResp?.ok && dictResp.translation) {
+      let tutorData = typeof dictResp.translation === 'object' ? dictResp.translation : { translation: dictResp.translation };
+      updateAiTutorModalContent(word, cue.text || '', tutorData, cue.fa || '');
+    } else {
+      updateAiTutorModalContent(word, cue.text || '', { translation: word }, cue.fa || '');
+    }
+  } catch (err) {
+    if (err?.message?.includes('Extension context invalidated')) {
+      notify('افزونه به‌روزرسانی شد. لطفاً صفحه را تازه (رفرش) کنید 🔄');
+      return;
+    }
+    console.warn('[ytfa] Dictionary fetch failed for word/phrase:', word, err);
+    updateAiTutorModalContent(word, cue.text || '', { translation: word }, cue.fa || '');
   }
 }
 
@@ -494,7 +778,6 @@ function ensureBar() {
   applyStyles();
   return bar;
 }
-
 function attachBar() {
   if (!isYouTubeVideoPage() || !bar) return;
   const player = getActivePlayer();
@@ -507,19 +790,16 @@ function attachBar() {
   ensureToggleBtn();
 }
 
-/* ───────────────── floating toggle / retry button ────────────────────────── */
-
-/* ───────────────── floating toggle / progress / download controls ────────────── */
-
 let controlsWrap = null;
 let toggleBtn = null;
 let progressBadge = null;
+let modelSelectBtn = null;
+let modelDropdownEl = null;
 let dlEnBtn = null;
 let dlFaBtn = null;
 let ensureToggleBtnFrame = null;
 
 function getActiveShortsActionBar() {
-  // ۱. پیدا کردن شورتس فعال در صفحه
   const activeReel = document.querySelector('ytd-reel-video-renderer[is-active]') ||
                      Array.from(document.querySelectorAll('ytd-reel-video-renderer')).find(r => {
                        const rect = r.getBoundingClientRect();
@@ -532,7 +812,6 @@ function getActiveShortsActionBar() {
     if (actionBar) return { actionBar, likeBtn };
   }
 
-  // ۲. جستجوی مستقیم بر اساس اسکرین‌شات DevTools شما
   const visibleBar = document.querySelector('reel-action-bar-view-model, .ytwReelActionBarViewModelHost');
   if (visibleBar) {
     const likeBtn = visibleBar.querySelector('like-button-view-model, .ytLikeButtonViewModelHost') ||
@@ -540,7 +819,6 @@ function getActiveShortsActionBar() {
     return { actionBar: visibleBar, likeBtn };
   }
 
-  // ۳. فال‌بک بر اساس والد دکمه لایک
   const likeBtn = document.querySelector('like-button-view-model, .ytLikeButtonViewModelHost, ytd-like-button-entity, #like-button');
   if (likeBtn) {
     const actionBar = likeBtn.closest('reel-action-bar-view-model, .ytwReelActionBarViewModelHost, #button-bar, #actions-inner, #actions') || likeBtn.parentElement;
@@ -625,6 +903,165 @@ function downloadSubtitles(lang = 'fa') {
   notify(`زیرنویس ${lang === 'fa' ? 'فارسی' : 'انگلیسی'} با موفقیت دانلود شد: ${filename}`);
 }
 
+function applyCachedModel(modelIndex) {
+  if (!state.cachedModels || !state.cachedModels[modelIndex]) return;
+  state.activeModelIndex = modelIndex;
+  const model = state.cachedModels[modelIndex];
+  const translationVideoId = state.videoId || currentVideoId;
+
+  if (Array.isArray(model.cues)) {
+    model.cues.forEach((cc, idx) => {
+      const cue = state.cues[idx] || state.cues.find(c => c.text === cc.text);
+      if (cue && cc.fa) {
+        cue.fa = cc.fa;
+        cue.phrases = Array.isArray(cc.phrases) ? cc.phrases : [];
+        cacheCaption(translationVideoId, cue.text, cue.fa, cue.phrases);
+      }
+    });
+  }
+
+  state.loadedFromCloudCache = true;
+  updateProgressAndDownload();
+  updateModelSelectBtn();
+
+  if (state.currentIndex >= 0 && state.cues[state.currentIndex]) {
+    showCue(state.cues[state.currentIndex]);
+  }
+
+  notify(`نسخه ترجمه تغییر یافت: ${model.modelName}`);
+}
+
+function updateModelSelectBtn() {
+  if (!modelSelectBtn) return;
+
+  if (state.loadedFromCloudCache && state.cachedModels && state.cachedModels.length > 0) {
+    const curModel = state.cachedModels[state.activeModelIndex] || state.cachedModels[0];
+    const isGoogle = curModel?.provider === 'google_free';
+    const icon = isGoogle ? '🌐' : '⚡';
+    const shortName = (curModel?.modelName || 'ابری').replace(/^OpenRouter\s*\(|\)$|^Gemini\s*\(|^DeepSeek\s*\(|^OpenAI\s*\(/g, '').trim();
+
+    modelSelectBtn.innerHTML = `
+      <span class="ytfa-model-icon">${icon}</span>
+      <span class="ytfa-model-name">${escapeHtml(shortName)}</span>
+      <span class="ytfa-model-arrow">▾</span>
+    `;
+    modelSelectBtn.title = `نسخه ترجمه فعال: ${curModel?.modelName || 'ابری'} (کلیک برای انتخاب مدل)`;
+    modelSelectBtn.style.display = 'inline-flex';
+  } else {
+    modelSelectBtn.style.display = 'none';
+    closeModelDropdown();
+  }
+}
+
+function closeModelDropdown() {
+  if (modelDropdownEl) {
+    modelDropdownEl.remove();
+    modelDropdownEl = null;
+    document.removeEventListener('click', onDocClickCloseDropdown);
+  }
+}
+
+function onDocClickCloseDropdown(e) {
+  if (modelDropdownEl && !modelDropdownEl.contains(e.target) && e.target !== modelSelectBtn) {
+    closeModelDropdown();
+  }
+}
+
+function toggleModelDropdown(e) {
+  e.stopPropagation();
+  if (modelDropdownEl) {
+    closeModelDropdown();
+    return;
+  }
+
+  if (!state.cachedModels || state.cachedModels.length === 0) return;
+
+  const player = getActivePlayer() || document.body;
+  modelDropdownEl = document.createElement('div');
+  modelDropdownEl.id = 'ytfa-model-dropdown';
+
+  let modelsHtml = state.cachedModels.map((m, idx) => {
+    const isActive = idx === state.activeModelIndex;
+    const isGoogle = m.provider === 'google_free';
+    return `
+      <button type="button" class="ytfa-model-item ${isActive ? 'active' : ''}" data-index="${idx}">
+        <span class="ytfa-model-item-icon">${isGoogle ? '🌐' : '⚡'}</span>
+        <div class="ytfa-model-item-info">
+          <div class="ytfa-model-item-title">${escapeHtml(m.modelName)}</div>
+          <div class="ytfa-model-item-sub">${isGoogle ? 'مترجم گوگل' : 'هوش مصنوعی'}</div>
+        </div>
+        ${isActive ? '<span class="ytfa-model-check">✓</span>' : ''}
+      </button>
+    `;
+  }).join('');
+
+  modelDropdownEl.innerHTML = `
+    <div class="ytfa-dropdown-header">
+      <span>نسخه‌های ترجمه ابری</span>
+      <span class="ytfa-dropdown-badge">${state.cachedModels.length} نسخه</span>
+    </div>
+    <div class="ytfa-dropdown-list">
+      ${modelsHtml}
+    </div>
+    <div class="ytfa-dropdown-divider"></div>
+    <button type="button" class="ytfa-model-retrans-action" title="ترجمه مجدد بر اساس پرووایدر و مدل فعال در تنظیمات افزونه">
+      <span class="ytfa-model-item-icon">🔄</span>
+      <div class="ytfa-model-item-info">
+        <div class="ytfa-model-item-title">ترجمه زنده با تنظیمات شما…</div>
+        <div class="ytfa-model-item-sub">نادیده گرفتن کش و ترجمه با پرووایدر انتخابی</div>
+      </div>
+    </button>
+  `;
+
+  modelDropdownEl.querySelectorAll('.ytfa-model-item').forEach((btn) => {
+    btn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const idx = parseInt(btn.dataset.index, 10);
+      closeModelDropdown();
+      applyCachedModel(idx);
+    });
+  });
+
+  modelDropdownEl.querySelector('.ytfa-model-retrans-action').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    closeModelDropdown();
+    console.log('[ytfa] User opted for live translation with active settings. Stopping old and starting fresh...');
+    stopTranslation();
+    state.bypassCloudCache = true;
+    state.loadedFromCloudCache = false;
+    state.uploadedToCloud = false;
+    state.cachedModels = [];
+    state.activeModelIndex = -1;
+    updateModelSelectBtn();
+    state.cues.forEach((c) => {
+      c.fa = '';
+      c.phrases = [];
+    });
+    captionCache.clear();
+    updateProgressAndDownload();
+    if (state.currentIndex >= 0 && state.cues[state.currentIndex]) {
+      showCue(state.cues[state.currentIndex]);
+    }
+    notify('در حال شروع ترجمه زنده با تنظیمات شما…');
+    translateAll({ bypassCloudCache: true });
+  });
+
+  modelDropdownEl.addEventListener('click', (ev) => ev.stopPropagation());
+
+  player.appendChild(modelDropdownEl);
+
+  const btnRect = modelSelectBtn.getBoundingClientRect();
+  const playerRect = player.getBoundingClientRect();
+
+  let bottom = playerRect.bottom - btnRect.top + 8;
+  let right = playerRect.right - btnRect.right;
+
+  modelDropdownEl.style.bottom = `${bottom}px`;
+  modelDropdownEl.style.right = `${Math.max(12, right)}px`;
+
+  setTimeout(() => document.addEventListener('click', onDocClickCloseDropdown), 50);
+}
+
 function updateProgressAndDownload() {
   if (!progressBadge || !dlEnBtn || !dlFaBtn) return;
 
@@ -633,6 +1070,7 @@ function updateProgressAndDownload() {
     progressBadge.style.display = 'none';
     dlEnBtn.style.display = 'none';
     dlFaBtn.style.display = 'none';
+    if (modelSelectBtn) modelSelectBtn.style.display = 'none';
     return;
   }
 
@@ -647,10 +1085,8 @@ function updateProgressAndDownload() {
   progressBadge.classList.toggle('completed', pct === 100);
   progressBadge.style.display = 'inline-flex';
 
-  // English button display
   dlEnBtn.style.display = 'inline-flex';
 
-  // Persian button display
   if (translatedCount > 0) {
     dlFaBtn.style.display = 'inline-flex';
     dlFaBtn.classList.toggle('completed', pct === 100);
@@ -660,6 +1096,8 @@ function updateProgressAndDownload() {
   } else {
     dlFaBtn.style.display = 'none';
   }
+
+  updateModelSelectBtn();
 }
 
 function ensureToggleBtn() {
@@ -703,6 +1141,14 @@ function ensureToggleBtn() {
     progressBadge.id = 'ytfa-progress-badge';
     progressBadge.style.display = 'none';
     controlsWrap.appendChild(progressBadge);
+
+    modelSelectBtn = document.createElement('button');
+    modelSelectBtn.id = 'ytfa-model-select-btn';
+    modelSelectBtn.className = 'ytfa-dl-btn ytfa-model-btn';
+    modelSelectBtn.type = 'button';
+    modelSelectBtn.style.display = 'none';
+    modelSelectBtn.addEventListener('click', toggleModelDropdown);
+    controlsWrap.appendChild(modelSelectBtn);
 
     dlEnBtn = document.createElement('button');
     dlEnBtn.id = 'ytfa-dl-en-btn';
@@ -978,8 +1424,332 @@ async function fetchCues(url) {
   }
 
   cues.sort((a, b) => a.start - b.start);
-  return cues;
+  return segmentCuesIntelligently(cues);
 }
+
+/* ───────────── Smart Subtitle Segmentation Engine ─────────────────────── */
+/*
+ * YouTube's auto-generated captions (ASR) produce wildly uneven segments:
+ * some events contain a single word, others contain 30+ words.
+ * This engine normalizes raw cues into natural, readable sentence-level
+ * chunks (similar to Language Reactor's approach), ensuring:
+ *   - Each displayed segment is 3–15 words (readable at a glance)
+ *   - Display duration is 1.8–8 seconds
+ *   - Splits happen at natural punctuation boundaries
+ *   - No single-word flashes or giant text walls
+ */
+
+const SEG_CONFIG = {
+  // Merge thresholds
+  MERGE_MIN_WORDS: 3,           // Cues with fewer words are merge candidates
+  MERGE_MAX_GAP_SEC: 1.5,       // Max time gap to allow merging adjacent cues
+  MERGE_MAX_WORDS: 15,          // Don't merge beyond this word count
+  MERGE_MAX_CHARS: 120,         // Don't merge beyond this character count
+  MERGE_SHORT_DUR_SEC: 1.5,     // Cues shorter than this are considered "tiny"
+
+  // Split thresholds
+  SPLIT_MIN_WORDS: 15,          // Cues with more words are split candidates
+  SPLIT_MIN_CHARS: 120,         // Cues with more chars are split candidates
+  SPLIT_PART_MIN_WORDS: 3,      // Each split part must have at least this many words
+
+  // Timing constraints
+  MIN_DURATION_SEC: 1.8,        // Minimum display time per cue
+  MAX_DURATION_SEC: 8.0,        // Maximum display time per cue
+};
+
+/**
+ * Count whitespace-separated words in a string.
+ */
+function wordCount(text) {
+  if (!text) return 0;
+  return text.trim().split(/\s+/).length;
+}
+
+/**
+ * Phase 1: Merge tiny fragments into larger, readable cues.
+ *
+ * Scans cues linearly. A cue is considered "tiny" if it has fewer than
+ * MERGE_MIN_WORDS words AND its duration is shorter than MERGE_SHORT_DUR_SEC.
+ * Tiny cues are accumulated into a buffer and flushed when the buffer
+ * reaches a natural size or when a gap in timing is detected.
+ */
+function mergeTinyFragments(cues) {
+  if (!cues.length) return [];
+
+  const {
+    MERGE_MIN_WORDS, MERGE_MAX_GAP_SEC,
+    MERGE_MAX_WORDS, MERGE_MAX_CHARS, MERGE_SHORT_DUR_SEC
+  } = SEG_CONFIG;
+
+  const merged = [];
+  let buf = null; // { start, end, text }
+
+  function flush() {
+    if (!buf) return;
+    merged.push({ start: buf.start, end: buf.end, text: buf.text.trim(), fa: '', phrases: [] });
+    buf = null;
+  }
+
+  for (let i = 0; i < cues.length; i++) {
+    const cue = cues[i];
+    const wc = wordCount(cue.text);
+    const dur = cue.end - cue.start;
+    const isTiny = wc < MERGE_MIN_WORDS && dur < MERGE_SHORT_DUR_SEC;
+
+    if (!buf) {
+      // Start a new buffer with this cue
+      buf = { start: cue.start, end: cue.end, text: cue.text };
+
+      // If this cue is already large enough on its own, flush immediately
+      if (!isTiny) flush();
+      continue;
+    }
+
+    // Check if we can merge this cue into the buffer
+    const gap = cue.start - buf.end;
+    const combinedText = buf.text + ' ' + cue.text;
+    const combinedWords = wordCount(combinedText);
+    const combinedChars = combinedText.length;
+
+    const canMerge =
+      gap <= MERGE_MAX_GAP_SEC &&
+      combinedWords <= MERGE_MAX_WORDS &&
+      combinedChars <= MERGE_MAX_CHARS;
+
+    if (isTiny && canMerge) {
+      // Merge tiny cue into buffer
+      buf.text = combinedText;
+      buf.end = cue.end;
+    } else if (!isTiny && canMerge && wordCount(buf.text) < MERGE_MIN_WORDS) {
+      // Buffer itself is tiny — absorb this normal cue into it and flush
+      buf.text = combinedText;
+      buf.end = cue.end;
+      flush();
+    } else {
+      // Can't merge — flush buffer first, then start fresh
+      flush();
+      buf = { start: cue.start, end: cue.end, text: cue.text };
+      if (!isTiny) flush();
+    }
+  }
+
+  flush();
+  return merged;
+}
+
+/**
+ * Phase 2: Split oversized cues at natural punctuation boundaries.
+ *
+ * If a cue exceeds SPLIT_MIN_WORDS or SPLIT_MIN_CHARS, we attempt to
+ * split it at punctuation marks (prioritized: sentence-ending → clause → comma).
+ * Each resulting part must have at least SPLIT_PART_MIN_WORDS words.
+ * Timing is distributed proportionally by character count.
+ */
+function splitOversizedCues(cues) {
+  if (!cues.length) return [];
+
+  const { SPLIT_MIN_WORDS, SPLIT_MIN_CHARS, SPLIT_PART_MIN_WORDS } = SEG_CONFIG;
+  const result = [];
+
+  for (const cue of cues) {
+    const wc = wordCount(cue.text);
+    const cc = cue.text.length;
+
+    if (wc <= SPLIT_MIN_WORDS && cc <= SPLIT_MIN_CHARS) {
+      result.push(cue);
+      continue;
+    }
+
+    // Find best split points using punctuation priority tiers
+    const parts = findBestSplit(cue.text, SPLIT_PART_MIN_WORDS, SPLIT_MIN_WORDS);
+
+    if (parts.length <= 1) {
+      // No valid split found — keep as-is
+      result.push(cue);
+      continue;
+    }
+
+    // Distribute timing proportionally by character count
+    const totalChars = parts.reduce((sum, p) => sum + p.length, 0);
+    const totalDur = cue.end - cue.start;
+    let elapsed = cue.start;
+
+    for (let i = 0; i < parts.length; i++) {
+      const partDur = totalDur * (parts[i].length / totalChars);
+      const partStart = elapsed;
+      const partEnd = i === parts.length - 1 ? cue.end : elapsed + partDur;
+      result.push({
+        start: partStart,
+        end: partEnd,
+        text: parts[i].trim(),
+        fa: '',
+        phrases: [],
+      });
+      elapsed = partEnd;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Find the best way to split text at punctuation boundaries.
+ * Tries sentence-ending punctuation first, then clause separators, then commas.
+ * Returns an array of text parts, or [text] if no valid split is possible.
+ */
+function findBestSplit(text, minWordsPerPart, targetMaxWords) {
+  // Priority tiers of split-point patterns (regex matches the punctuation + trailing space)
+  const tiers = [
+    /[.!?]+\s+/g,           // Sentence-ending punctuation
+    /[;—–]+\s+/g,           // Clause separators (semicolon, em-dash, en-dash)
+    /,\s+/g,                // Commas
+    /:\s+/g,                // Colons
+  ];
+
+  for (const pattern of tiers) {
+    const parts = trySplitAt(text, pattern, minWordsPerPart, targetMaxWords);
+    if (parts && parts.length > 1) return parts;
+  }
+
+  return [text];
+}
+
+/**
+ * Attempt to split text using a specific punctuation regex pattern.
+ * Returns valid parts array or null if split doesn't meet constraints.
+ */
+function trySplitAt(text, pattern, minWordsPerPart, targetMaxWords) {
+  // Find all split positions
+  const positions = [];
+  let match;
+  while ((match = pattern.exec(text)) !== null) {
+    // Split position is AFTER the punctuation+space
+    positions.push(match.index + match[0].length);
+  }
+
+  if (!positions.length) return null;
+
+  // Try splitting at each position and pick the most balanced split
+  let bestParts = null;
+  let bestScore = Infinity;
+
+  // Try single-point splits first (into 2 parts)
+  for (const pos of positions) {
+    const left = text.slice(0, pos).trim();
+    const right = text.slice(pos).trim();
+
+    if (!left || !right) continue;
+
+    const leftWc = wordCount(left);
+    const rightWc = wordCount(right);
+
+    if (leftWc < minWordsPerPart || rightWc < minWordsPerPart) continue;
+
+    // Score: how balanced are the parts? Lower is better.
+    const score = Math.abs(leftWc - rightWc);
+
+    // Also check if both parts are under targetMaxWords
+    const bothUnderTarget = leftWc <= targetMaxWords && rightWc <= targetMaxWords;
+
+    if (bothUnderTarget && score < bestScore) {
+      bestScore = score;
+      bestParts = [left, right];
+    }
+  }
+
+  // If a 2-way split didn't bring parts under target, try 3-way
+  if (!bestParts && positions.length >= 2) {
+    for (let i = 0; i < positions.length - 1; i++) {
+      for (let j = i + 1; j < positions.length; j++) {
+        const p1 = text.slice(0, positions[i]).trim();
+        const p2 = text.slice(positions[i], positions[j]).trim();
+        const p3 = text.slice(positions[j]).trim();
+
+        if (!p1 || !p2 || !p3) continue;
+
+        const wc1 = wordCount(p1);
+        const wc2 = wordCount(p2);
+        const wc3 = wordCount(p3);
+
+        if (wc1 < minWordsPerPart || wc2 < minWordsPerPart || wc3 < minWordsPerPart) continue;
+
+        const maxWc = Math.max(wc1, wc2, wc3);
+        const minWc = Math.min(wc1, wc2, wc3);
+        const score = maxWc - minWc;
+
+        if (score < bestScore) {
+          bestScore = score;
+          bestParts = [p1, p2, p3];
+        }
+      }
+    }
+  }
+
+  return bestParts;
+}
+
+/**
+ * Phase 3: Enforce minimum and maximum display duration constraints.
+ *
+ * - If a cue is too short (< MIN_DURATION_SEC), extend its `end` time
+ *   without overlapping the next cue.
+ * - If a cue is too long (> MAX_DURATION_SEC), trim its `end` time.
+ */
+function enforceTimingConstraints(cues) {
+  if (!cues.length) return [];
+
+  const { MIN_DURATION_SEC, MAX_DURATION_SEC } = SEG_CONFIG;
+  const result = [];
+
+  for (let i = 0; i < cues.length; i++) {
+    const cue = { ...cues[i] };
+    let dur = cue.end - cue.start;
+
+    // Extend short cues
+    if (dur < MIN_DURATION_SEC) {
+      const desiredEnd = cue.start + MIN_DURATION_SEC;
+      // Don't overlap with the next cue
+      const nextStart = (i + 1 < cues.length) ? cues[i + 1].start : Infinity;
+      cue.end = Math.min(desiredEnd, nextStart);
+    }
+
+    // Trim overly long cues
+    dur = cue.end - cue.start;
+    if (dur > MAX_DURATION_SEC) {
+      cue.end = cue.start + MAX_DURATION_SEC;
+    }
+
+    result.push(cue);
+  }
+
+  return result;
+}
+
+/**
+ * Main orchestrator: takes raw YouTube cues and returns intelligently
+ * segmented cues with natural sentence boundaries and proper timing.
+ */
+function segmentCuesIntelligently(rawCues) {
+  if (!rawCues || !rawCues.length) return rawCues;
+
+  // Phase 1: Merge tiny fragments into readable chunks
+  const merged = mergeTinyFragments(rawCues);
+
+  // Phase 2: Split oversized cues at punctuation boundaries
+  const split = splitOversizedCues(merged);
+
+  // Phase 3: Enforce min/max display duration
+  const final = enforceTimingConstraints(split);
+
+  console.log(
+    `[ytfa] 📐 Segmentation: ${rawCues.length} raw cues → ` +
+    `${merged.length} merged → ${split.length} split → ${final.length} final`
+  );
+
+  return final;
+}
+
+/* ───────────── End of Smart Subtitle Segmentation Engine ──────────────── */
 
 function groupCuesByRPM(cues, rpm) {
   const multiplier = 3;
@@ -1027,7 +1797,12 @@ function stopTranslation() {
   isTranslating = false;
 }
 
-async function translateAll() {
+async function translateAll({ bypassCloudCache = false } = {}) {
+  if (!isExtensionValid()) {
+    stopTranslation();
+    return;
+  }
+
   // اگر افزونه خاموش باشد، صفحه یوتیوب نباشد یا تب در پس‌زمینه (مخفی) باشد، ترجمه متوقف می‌شود
   if (!settings.enabled || !isYouTubeVideoPage() || document.hidden) {
     stopTranslation();
@@ -1040,6 +1815,42 @@ async function translateAll() {
   const translationVideoId = state.videoId || currentVideoId;
   applyCachedCaptions(translationVideoId, state.cues);
 
+  // Check Cloud Cache if not bypassed, not already loaded from cloud, and cues are untranslated
+  if (!bypassCloudCache && !state.bypassCloudCache && !state.loadedFromCloudCache && state.cues.some(c => !c.fa)) {
+    try {
+      const cloudRes = await chrome.runtime.sendMessage({
+        type: 'GET_CLOUD_CACHE',
+        videoId: translationVideoId
+      });
+      if (cloudRes?.ok && cloudRes.data?.found) {
+        console.log(`[ytfa] ⚡ Loaded subtitles from Cloud Cache for ${translationVideoId}`);
+        if (Array.isArray(cloudRes.data.models) && cloudRes.data.models.length > 0) {
+          state.cachedModels = cloudRes.data.models;
+          const bestIdx = cloudRes.data.bestIndex != null ? cloudRes.data.bestIndex : 0;
+          applyCachedModel(bestIdx);
+          return;
+        } else if (Array.isArray(cloudRes.data.cues) && cloudRes.data.cues.length > 0) {
+          state.cachedModels = [{
+            provider: 'unknown',
+            modelId: 'legacy',
+            modelName: 'ترجمه ابری',
+            cues: cloudRes.data.cues
+          }];
+          applyCachedModel(0);
+          return;
+        }
+      }
+    } catch (cloudErr) {
+      if (cloudErr?.message?.includes('Extension context invalidated') || !isExtensionValid()) {
+        console.warn('[ytfa] Extension context invalidated on cloud cache check.');
+        stopTranslation();
+        notify('افزونه به‌روزرسانی شد. لطفاً برای ادامه، صفحه را تازه (رفرش) کنید 🔄');
+        return;
+      }
+      console.warn('[ytfa] Cloud cache lookup error:', cloudErr);
+    }
+  }
+
   const rpm = settings.rpm || 15;
   activeBatches = groupCuesByRPM(state.cues, rpm);
   isTranslating = true;
@@ -1047,6 +1858,11 @@ async function translateAll() {
   let notifiedError = false;
 
   while (isTranslating && currentSessionId === state.translationSessionId) {
+    if (!isExtensionValid()) {
+      stopTranslation();
+      return;
+    }
+
     // بررسی مجدد فعال بودن تب و تنظیمات در هر دور حلقه
     if (!settings.enabled || document.hidden) {
       stopTranslation();
@@ -1085,9 +1901,10 @@ async function translateAll() {
 
     const ERROR_MESSAGES = {
       ERR_429: 'به محدودیت تعداد درخواست هوش مصنوعی (ارور ۴۲۹) برخوردید. لطفاً چند لحظه صبر کنید یا محدودیت RPM را در تنظیمات کاهش دهید.',
-      ERR_AUTH: 'کلید API معتبر نیست یا منقضی شده است (ارور ۴۰۱/۴۰۳). لطفاً کلید ثبت‌شده در تنظیمات افزونه را بررسی کنید.',
+      ERR_AUTH: 'کلید API معتبر نیست، منقضی شده یا دسترسی ندارد (ارور ۴۰۱/۴۰۳). لطفاً کلید ثبت‌شده در تنظیمات افزونه را بررسی کنید.',
       ERR_SERVER: 'سرور هوش مصنوعی موقتاً در دسترس نیست یا با ترافیک سنگین مواجه است (ارور ۵۰۳/۵۰۰). افزونه به طور خودکار مجدداً تلاش خواهد کرد.',
       ERR_400: 'درخواست نامعتبر است (ارور ۴۰۰). احتمالاً نام مدل انتخابی اشتباه است یا توسط این پرووایدر پشتیبانی نمی‌شود.',
+      ERR_GEO: '🌍 دسترسی به هوش مصنوعی به دلیل تحریم یا لوکیشن مسدود شد (ارور ۴۰۰/۴۰۳). لطفاً VPN خود را روشن کرده یا لوکیشن سرور آن را تغییر دهید.',
       ERR_NETWORK: 'خطای شبکه یا قطعی اینترنت. لطفاً اتصال فیلترشکن (VPN) خود را بررسی کنید.',
     };
 
@@ -1139,7 +1956,7 @@ async function translateAll() {
           stopTranslation();
         }
         return;
-      } else if (resp?.error === 'ERR_AUTH') {
+      } else if (resp?.error === 'ERR_AUTH' || resp?.error === 'ERR_GEO') {
         if (currentSessionId === state.translationSessionId) {
           notify(ERROR_MESSAGES[resp.error]);
           stopTranslation();
@@ -1162,6 +1979,12 @@ async function translateAll() {
         }
       }
     } catch (e) {
+      if (e?.message?.includes('Extension context invalidated') || !isExtensionValid()) {
+        console.warn('[ytfa] Extension was reloaded or updated. Stopping translation loop.');
+        stopTranslation();
+        notify('افزونه به‌روزرسانی شد. لطفاً برای ادامه، صفحه را تازه (رفرش) کنید 🔄');
+        return;
+      }
       hasError = true;
       console.warn('[ytfa] translate failed:', e);
     }
@@ -1174,6 +1997,22 @@ async function translateAll() {
 
   if (currentSessionId === state.translationSessionId) {
     isTranslating = false;
+
+    // Upload 100% translated subtitles to Cloud Cache (if enabled & not from cloud)
+    const allTranslated = state.cues.length > 0 && state.cues.every(c => c.fa && c.fa.trim().length > 0);
+    if (allTranslated && !state.uploadedToCloud && !state.loadedFromCloudCache && isExtensionValid()) {
+      state.uploadedToCloud = true;
+      chrome.runtime.sendMessage({
+        type: 'SAVE_CLOUD_CACHE',
+        videoId: translationVideoId,
+        cues: state.cues,
+        title: state.videoMeta?.title || document.title
+      }).then(res => {
+        if (res?.ok) console.log(`[ytfa] ☁️ Subtitles successfully shared to Cloud Cache!`);
+      }).catch(err => {
+        console.warn('[ytfa] Subtitle cloud upload error:', err);
+      });
+    }
   }
 }
 
@@ -1263,7 +2102,7 @@ let notifyEl;
 let notifyTimeout = null;
 
 function notify(text) {
-  if (!settings.enabled || !isYouTubeVideoPage()) return;
+  if (!isYouTubeVideoPage()) return;
   if (!notifyEl) {
     notifyEl = document.createElement('div');
     notifyEl.id = 'ytfa-toast';
@@ -1278,7 +2117,7 @@ function notify(text) {
   notifyEl.classList.add('ytfa-visible');
 
   notifyTimeout = setTimeout(() => {
-    notifyEl.classList.remove('ytfa-visible');
+    notifyEl?.classList.remove('ytfa-visible');
     notifyTimeout = null;
   }, 8000);
 }
@@ -1367,10 +2206,12 @@ async function boot({ silent = false } = {}) {
 
 function cleanupPageUi() {
   hideBar();
+  closeModelDropdown();
   if (faEl) faEl.textContent = '';
   if (origEl) origEl.textContent = '';
   if (bar?.parentElement) bar.parentElement.classList.remove('ytfa-on');
   if (toggleBtn) toggleBtn.style.display = 'none';
+  if (modelSelectBtn) modelSelectBtn.style.display = 'none';
   if (notifyEl) notifyEl.classList.remove('ytfa-visible');
   if (notifyTimeout) {
     clearTimeout(notifyTimeout);
@@ -1413,6 +2254,11 @@ function onNavigate() {
     state.cues = [];
     state.currentIndex = -1;
     state.activeVideo = null;
+    state.loadedFromCloudCache = false;
+    state.uploadedToCloud = false;
+    state.bypassCloudCache = false;
+    state.cachedModels = [];
+    state.activeModelIndex = -1;
     bootFailed = false;
     subtitleVisible = true;
     cleanupPageUi();

@@ -213,7 +213,6 @@
               <option value="gemini-3.1-pro">Gemini 3.1 Pro</option>
               <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
               <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-
               <option value="__custom__">سفارشی…</option>
             </select>
           </label>
@@ -353,6 +352,19 @@
         </label>
       </section>
 
+      <!-- Cloud Cache -->
+      <section class="card">
+        <h2>⚡ سرور کش ابری و اشتراک‌گذاری</h2>
+        <label class="check">
+          <input type="checkbox" id="cloudCacheEnabled" />
+          <span>استفاده از کش ابری (لود آنی و بدون مصرف توکن)</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="cloudCacheShare" />
+          <span>مشارکت در ترجمه ابری (ارسال خودکار زیرنویس کامل‌شده برای دیگران)</span>
+        </label>
+      </section>
+
       <!-- Live preview -->
       <section class="card preview-card">
         <h2>پیش‌نمایش</h2>
@@ -383,14 +395,14 @@
             </svg>
             <input type="text" id="savedSearchInput" placeholder="جستجو در عبارت انگلیسی یا فارسی…" />
           </div>
-          <button type="button" id="exportAnkiBtn" class="btn-anki" title="خروجی آنکی CSV">
+          <button type="button" id="exportAnkiBtn" class="btn-anki" title="خروجی آنکی TXT">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            <span>خروجی آنکی (.csv)</span>
+            <span>خروجی آنکی (.txt)</span>
           </button>
         </div>
       </section>

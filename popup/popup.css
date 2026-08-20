@@ -1260,3 +1260,79 @@ mark.hl-word {
   color: var(--muted);
   line-height: 1.5;
 }
+
+/* ─── Advanced Details & Audio Pronunciation ──────────────── */
+.advanced-details {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: var(--card-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-input);
+  font-size: 12px;
+}
+
+.advanced-details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-weight: 600;
+  user-select: none;
+  transition: color var(--transition);
+}
+
+.advanced-details summary:hover {
+  color: var(--text);
+}
+
+.saved-word-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-play-audio {
+  background: rgba(0, 245, 212, 0.1);
+  border: 1px solid rgba(0, 245, 212, 0.3);
+  color: var(--accent);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  padding: 0;
+}
+
+.btn-play-audio:hover {
+  background: var(--accent);
+  color: #000;
+  transform: scale(1.08);
+}
+
+.btn-play-audio:active {
+  transform: scale(0.95);
+}
+
+.saved-ipa {
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  font-size: 12px;
+  color: #94a3b8;
+  direction: ltr;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.saved-tutor-note {
+  font-size: 11px;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin-top: 4px;
+  line-height: 1.4;
+}
