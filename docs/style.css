@@ -321,6 +321,10 @@ h1, h2, h3, h4, h5, h6, p {
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 25px rgba(0, 242, 254, 0.45));
   display: inline-block;
+  padding-top: 0.1em;
+  padding-bottom: 0.28em;
+  line-height: 1.35;
+  vertical-align: middle;
 }
 
 .text-cyan-gradient {
@@ -328,6 +332,11 @@ h1, h2, h3, h4, h5, h6, p {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  display: inline-block;
+  padding-top: 0.1em;
+  padding-bottom: 0.28em;
+  line-height: 1.35;
+  vertical-align: middle;
 }
 
 .text-glow {
@@ -840,7 +849,7 @@ h1, h2, h3, h4, h5, h6, p {
 .text-right { text-align: right; }
 .text-left { text-align: left; }
 
-.leading-tight { line-height: 1.25; }
+.leading-tight { line-height: 1.45; }
 .leading-relaxed { line-height: 1.625; }
 .tracking-tight { letter-spacing: -0.025em; }
 
@@ -1078,7 +1087,7 @@ h1, h2, h3, h4, h5, h6, p {
   .sm\:text-5xl { font-size: 3rem; line-height: 1; }
   .sm\:text-6xl { font-size: 3.75rem; line-height: 1; }
 
-  .sm\:leading-tight { line-height: 1.25; }
+  .sm\:leading-tight { line-height: 1.4; }
   .sm\:whitespace-normal { white-space: normal; }
 
   .sm\:rounded-3xl { border-radius: 1.5rem; }
